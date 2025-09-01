@@ -4,18 +4,26 @@
 \alias{runModule.run.write.configs}
 \title{Generate model-specific run configuration files for one or more PEcAn runs}
 \usage{
+<<<<<<< HEAD
 runModule.run.write.configs(
   settings,
   overwrite = TRUE,
   use.existing.samples = TRUE
 )
+=======
+runModule.run.write.configs(settings, overwrite = TRUE, input_design = NULL)
+>>>>>>> 28991a9f6632642e806edb50171460634614fb8e
 }
 \arguments{
 \item{settings}{a PEcAn Settings or MultiSettings object}
 
 \item{overwrite}{logical: Replace config files if they already exist?}
 
+<<<<<<< HEAD
 \item{use.existing.samples}{FALSE (default), TRUE, or filename}
+=======
+\item{input_design}{the input indices for samples}
+>>>>>>> 28991a9f6632642e806edb50171460634614fb8e
 }
 \value{
 A modified settings object, invisibly

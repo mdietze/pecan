@@ -1,17 +1,15 @@
 # this needs to be at the top, what version are we building
 ARG IMAGE_VERSION="latest"
+ARG PARENT_IMAGE="pecan/models"
 
 # ----------------------------------------------------------------------
 # BUILD MODEL BINARY
 # ----------------------------------------------------------------------
-FROM pecan/models:${IMAGE_VERSION} as model-binary
+FROM ${PARENT_IMAGE}:${IMAGE_VERSION} AS model-binary
 
 # Some variables that can be used to set control the docker build
 ARG MODEL_VERSION="2.2.0"
 ARG BINARY_VERSION="2.2"
-
-# specify fortran compiler
-ENV FC_TYPE=GNU
 
 # install dependencies
 RUN apt-get update \
@@ -20,17 +18,16 @@ RUN apt-get update \
        curl \
        gfortran \
        git \
-       libhdf5-dev \
-       libopenmpi-dev \
+       libhdf5-openmpi-dev  \
     && rm -rf /var/lib/apt/lists/*
 
 # download, unzip and build ed2
 WORKDIR /src
-RUN git -c http.sslVerify=false clone https://github.com/EDmodel/ED2.git \
-    && cd ED2/ED/build \
-    && curl -o make/include.mk.VM http://isda.ncsa.illinois.edu/~kooper/EBI/include.mk.opt.`uname -s` \
+RUN git -c http.sslVerify=false clone https://github.com/EDmodel/ED2.git
+COPY data-raw/include.mk.opt /src/ED2/ED/build/make/include.mk.pecan
+RUN cd ED2/ED/build \
     && if [ "${MODEL_VERSION}" != "git" ]; then git checkout "v.${MODEL_VERSION}"; fi \
-    && ./install.sh -g -p VM \
+    && ./install.sh -g -p pecan \
     && mv /src/ED2/ED/build/ed_${BINARY_VERSION}-opt /src/ED2/ED/build/ed 
 
 ########################################################################
@@ -38,7 +35,7 @@ RUN git -c http.sslVerify=false clone https://github.com/EDmodel/ED2.git \
 # ----------------------------------------------------------------------
 # BUILD PECAN FOR MODEL
 # ----------------------------------------------------------------------
-FROM pecan/models:${IMAGE_VERSION}
+FROM ${PARENT_IMAGE}:${IMAGE_VERSION}
 
 # ----------------------------------------------------------------------
 # INSTALL MODEL SPECIFIC PIECES
@@ -46,7 +43,8 @@ FROM pecan/models:${IMAGE_VERSION}
 
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
-       libopenmpi3 \
+       libhdf5-openmpi-103-1t64 \
+       libgomp1 \
     && rm -rf /var/lib/apt/lists/*
 
 # INSTALL PEcAn.ED2

@@ -1,4 +1,13 @@
-# PEcAn.all 1.7.2.9000
+# PEcAn.all 1.9.0
+
+## License change
+* PEcAn.all is now distributed under the BSD three-clause license instead of the NCSA Open Source license.
+
+## Changed
+* `pecan_version()` now reports the Git revision (if known) for each package,
+  and prints its results more compactly for easier reading.
+
+# PEcAn.all 1.8.0
 
 ## Added
 

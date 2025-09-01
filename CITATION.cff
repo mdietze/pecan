@@ -2,7 +2,7 @@ cff-version: 1.2.0
 title: >-
   The Predictive Ecosystem Analyzer (PEcAn) is an
   integrated ecological bioinformatics toolbox.
-version: 1.7.2
+version: 1.8.0
 abstract: >-
   The Predictive Ecosystem Analyzer (PEcAn) (see
   pecanproject.org) is an integrated ecological
@@ -20,9 +20,7 @@ abstract: >-
   improve this ability by developing a accessibe
   framework for integrating multiple data sources in
   a sensible manner.
-license:
-  - BSD-3-Clause
-  - NCSA
+license: BSD-3-Clause
 doi: 10.5281/zenodo.5557914
 message: >-
   Please cite this software using the metadata from
@@ -77,7 +75,7 @@ authors:
   - affiliation: University of Cambridge
     given-names: Anne Thomas
     orcid: 'https://orcid.org/0000-0002-2808-6462'
-  - affiliation: CK Black Science Consulting
+  - affiliation: Pools and Fluxes LLC
     given-names: Chris Black
     orcid: 'https://orcid.org/0000-0001-8382-298X'
   - affiliation: Rutgers University
@@ -120,7 +118,9 @@ authors:
   - given-names: Eric R. Scott
     affiliation: University of Arizona
     orcid: 'https://orcid.org/0000-0002-7430-7879'
-  
+  - given-names: Harunobu Ishii
+    affiliation: Boston University Software & Application Innovation Lab(SAIL)
+
 preferred-citation:
   type: article
   title: Facilitating feedbacks between field measurements and ecosystem models

@@ -1,11 +1,3 @@
-#-------------------------------------------------------------------------------
-# Copyright (c) 2012 University of Illinois, NCSA.
-# All rights reserved. This program and the accompanying materials
-# are made available under the terms of the
-# University of Illinois/NCSA Open Source License
-# which accompanies this distribution, and is available at
-# http://opensource.ncsa.illinois.edu/license.html
-#-------------------------------------------------------------------------------
 
 ## R Code to convert NetCDF CF met files into MAAT model met files
 
@@ -30,6 +22,7 @@ PREFIX_XML <- "<?xml version=\"1.0\"?>\n"
 ##' @param verbose should the function be very verbose
 ##' @param leap_year Enforce Leap-years? If set to TRUE, will require leap years to have 366 days. 
 ##' If set to false, will require all years to have 365 days. Default = TRUE.
+##' @param ... additional arguments, currently ignored
 ##' @export
 ##' @author Shawn P. Serbin
 ##'

@@ -1,18 +1,9 @@
-##------------------------------------------------------------------------------
-##Copyright (c) 2015 NCSA
-##All rights reserved. This program and the accompanying materials
-##are made available under the terms of the 
-##University of Illinois/NCSA Open Source License
-##which accompanies this distribution, and is available at
-##http://opensource.ncsa.illinois.edu/license.html
-##------------------------------------------------------------------------------
-##-------------------------------------------------------------------------------------------------#
 ##' Writes config files for use with the Community Land Model model.
 ##'
 ##' @name write.config.CLM45
 ##' @title Write CLM4.5 configuration files
 ##' @param defaults list of defaults to process
-##' @param trait.samples vector of samples for a given trait
+##' @param trait.values vector of samples for a given trait
 ##' @param settings list of settings from pecan settings file
 ##' @param run.id id of run
 ##' @return none

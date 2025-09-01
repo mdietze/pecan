@@ -42,7 +42,6 @@ $userok=isset($_REQUEST['userok']);
 $offline=isset($_REQUEST['offline']);
 $pecan_edit=isset($_REQUEST['pecan_edit']);
 $model_edit=isset($_REQUEST['model_edit']);
-$browndog=isset($_REQUEST['browndog']);
 $qsub=isset($_REQUEST['qsub']);
 
 # parameters
@@ -284,13 +283,6 @@ if (isset($db_fia_database) && ($db_fia_database != "")) {
 fwrite($fh, "    <dbfiles>{$dbfiles_folder}</dbfiles>" . PHP_EOL);
 fwrite($fh, "  </database>" . PHP_EOL);
 
-if ($browndog) {
-  fwrite($fh, "  <browndog>" . PHP_EOL);
-  fwrite($fh, "    <url>{$browndog_url}</url>" . PHP_EOL);
-  fwrite($fh, "    <username>{$browndog_username}</username>" . PHP_EOL);
-  fwrite($fh, "    <password>{$browndog_password}</password>" . PHP_EOL);
-  fwrite($fh, "  </browndog>" . PHP_EOL);
-}
 
 fwrite($fh, "  <pfts>" . PHP_EOL);
 foreach($pft as $p) {
@@ -401,7 +393,9 @@ foreach($_REQUEST as $key => $val) {
     $parts=explode(".", $val, 3);
     fwrite($fh, "        <source>{$parts[0]}</source>" . PHP_EOL);
     fwrite($fh, "        <output>{$parts[1]}</output>" . PHP_EOL);
-    fwrite($fh, "        <product>{$parts[2]}</product>" . PHP_EOL);
+    if (count($parts) > 2) {
+      fwrite($fh, "        <product>{$parts[2]}</product>" . PHP_EOL);
+    }
     if (isset($_REQUEST['fluxusername'])) {
       fwrite($fh, "      <username>{$_REQUEST['fluxusername']}</username>" . PHP_EOL);
     }

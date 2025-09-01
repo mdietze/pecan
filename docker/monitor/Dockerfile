@@ -1,4 +1,4 @@
-FROM python:3.5
+FROM python:3.12
 
 ENV RABBITMQ_URI="amqp://guest:guest@rabbitmq/%2F" \
     RABBITMQ_MGMT_PORT="15672" \
@@ -17,4 +17,4 @@ COPY requirements.txt /src/
 RUN pip3 install -r /src/requirements.txt
 
 COPY . /src/
-CMD python3 monitor.py
+CMD ["python3", "./monitor.py"]

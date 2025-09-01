@@ -1,12 +1,3 @@
-#-------------------------------------------------------------------------------
-# Copyright (c) 2012 University of Illinois, NCSA.
-# All rights reserved. This program and the accompanying materials
-# are made available under the terms of the
-# University of Illinois/NCSA Open Source License
-# which accompanies this distribution, and is available at
-# http://opensource.ncsa.illinois.edu/license.html
-#-------------------------------------------------------------------------------
-
 ##' Function to insert a file into the dbfiles table as an input
 ##'
 ##' This will write into the dbfiles, inputs, machines and formats the required
@@ -59,9 +50,8 @@ dbfile.input.insert <- function(in.path, in.prefix, siteid, startdate, enddate, 
 
 
   # setup parent part of query if specified
-  if (is.na(parentid)) {
-    parent <- ""
-  } else {
+  parent <- ""
+  if (!is.na(parentid)) {
     parent <- paste0(" AND parent_id=", parentid)
   }
 
@@ -71,7 +61,7 @@ dbfile.input.insert <- function(in.path, in.prefix, siteid, startdate, enddate, 
       "SELECT * FROM inputs WHERE site_id=", siteid,
       " AND name= '", name,
       "' AND format_id=", formatid,
-      parent
+      parent, ";"
     ),
     con = con
   )
@@ -120,26 +110,26 @@ dbfile.input.insert <- function(in.path, in.prefix, siteid, startdate, enddate, 
         "INSERT INTO inputs ",
         "(site_id, format_id, name) VALUES (",
         siteid, ", ", formatid, ", '", name,
-        "'", ") RETURNING id"
+        "'", ") RETURNING id;"
       )
     } else if (parent == "" && !is.null(startdate)) {
       cmd <- paste0(
         "INSERT INTO inputs ",
         "(site_id, format_id, start_date, end_date, name) VALUES (",
         siteid, ", ", formatid, ", '", startdate, "', '", enddate, "','", name,
-        "') RETURNING id"
+        "') RETURNING id;"
       )
     } else if (is.null(startdate)) {
       cmd <- paste0(
         "INSERT INTO inputs ",
         "(site_id, format_id, name, parent_id) VALUES (",
-        siteid, ", ", formatid, ", '", name, "',", parentid, ") RETURNING id"
+        siteid, ", ", formatid, ", '", name, "',", parentid, ") RETURNING id;"
       )
     } else {
       cmd <- paste0(
         "INSERT INTO inputs ",
         "(site_id, format_id, start_date, end_date, name, parent_id) VALUES (",
-        siteid, ", ", formatid, ", '", startdate, "', '", enddate, "','", name, "',", parentid, ") RETURNING id"
+        siteid, ", ", formatid, ", '", startdate, "', '", enddate, "','", name, "',", parentid, ") RETURNING id;"
       )
     }
     # This is the id that we just registered
@@ -150,7 +140,7 @@ dbfile.input.insert <- function(in.path, in.prefix, siteid, startdate, enddate, 
       inputid <- db.query(
         query = paste0(
           "SELECT id FROM inputs WHERE site_id=", siteid,
-          " AND format_id=", formatid
+          " AND format_id=", formatid, ";"
         ),
         con = con
       )$id
@@ -251,13 +241,13 @@ dbfile.input.check <- function(siteid, startdate = NULL, enddate = NULL, mimetyp
   formatid <- get.id(table = "formats", colnames = c("mimetype_id", "name"), values = c(mimetypeid, formatname), con = con)
 
   if (is.null(formatid)) {
-    invisible(data.frame())
+    return (invisible(data.frame()))
   }
 
   # setup parent part of query if specified
-  if (is.na(parentid)) {
-    parent <- ""
-  } else {
+  parent <- ""
+  
+  if (!is.na(parentid)) {
     parent <- paste0(" AND parent_id=", parentid)
   }
 
@@ -459,7 +449,7 @@ dbfile.posterior.check <- function(pft, mimetype, formatname, con, hostname = PE
   # find appropriate pft
   pftid <- get.id(table = "pfts", values = "name", colnames = pft, con = con)
   if (is.null(pftid)) {
-    invisible(data.frame())
+    return (invisible(data.frame()))
   }
 
   # find appropriate format
@@ -470,7 +460,7 @@ dbfile.posterior.check <- function(pft, mimetype, formatname, con, hostname = PE
   formatid <- get.id(table = "formats", colnames = c("mimetype_id", "name"), values = c(mimetypeid, formatname), con = con)
 
   if (is.null(formatid)) {
-    invisible(data.frame())
+    return (invisible(data.frame()))
   }
 
   # find appropriate posterior
@@ -482,7 +472,7 @@ dbfile.posterior.check <- function(pft, mimetype, formatname, con, hostname = PE
     con = con
   )[["id"]]
   if (is.null(posteriorid)) {
-    invisible(data.frame())
+    return (invisible(data.frame()))
   }
 
   invisible(dbfile.check(type = "Posterior", container.id = posteriorid, con = con, hostname = hostname))
@@ -648,12 +638,12 @@ dbfile.file <- function(type, id, con, hostname = PEcAn.remote::fqdn()) {
 
   if (nrow(files) > 1) {
     PEcAn.logger::logger.warn("multiple files found for", id, "returned; using the first one found")
-    invisible(file.path(files[1, "file_path"], files[1, "file_name"]))
+    return(invisible(file.path(files[1, "file_path"], files[1, "file_name"])))
   } else if (nrow(files) == 1) {
-    invisible(file.path(files[1, "file_path"], files[1, "file_name"]))
+    return(invisible(file.path(files[1, "file_path"], files[1, "file_name"])))
   } else {
     PEcAn.logger::logger.warn("no files found for ", id, "in database")
-    invisible(NA)
+    return(invisible(NA))
   }
 }
 
@@ -671,7 +661,8 @@ dbfile.id <- function(type, file, con, hostname = PEcAn.remote::fqdn()) {
   # find appropriate host
   hostid <- db.query(query = paste0("SELECT id FROM machines WHERE hostname='", hostname, "'"), con = con)[["id"]]
   if (is.null(hostid)) {
-    invisible(NA)
+    PEcAn.logger::logger.warn("hostid not found in database")
+    return (invisible(NA))
   }
 
   # find file

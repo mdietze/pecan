@@ -1,5 +1,11 @@
-##' @name matchInventoryRings
-##' @title matchInventoryRings
+#' matchInventoryRings
+#'
+#' @param trees,rings codes from which to extract IDs
+#' @param extractor function to call, specified without its initial `to.`
+#'  e.g. "TreeCode" calls `to.TreeCode`
+#' @param nyears number of years to extract
+#' @param coredOnly logical: Only include trees with data from 2000?
+#'
 ##' @export
 matchInventoryRings <- function(trees, rings, extractor = "TreeCode", nyears = 30, coredOnly = TRUE) {
   
@@ -25,7 +31,7 @@ matchInventoryRings <- function(trees, rings, extractor = "TreeCode", nyears = 3
   mch       <- match(tree.ID, ring.ID)
   cored     <- apply(!is.na(trees[, grep("DATE_CORE_COLLECT", names(trees))]), 1, any)
   unmatched <- which(cored & is.na(mch))
-  write.table(tree.ID[unmatched], file = "unmatched.txt")
+  utils::write.table(tree.ID[unmatched], file = "unmatched.txt")
   mch[duplicated(mch)] <- NA  ## if there's multiple stems, match the first
   
   ## combine data into one table

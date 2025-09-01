@@ -1,8 +1,7 @@
 Package: PEcAn.DB
 Type: Package
 Title: PEcAn Functions Used for Ecological Forecasts and Reanalysis
-Version: 1.7.2.9000
-Date: 2021-10-04
+Version: 1.8.1
 Authors@R: c(person("David", "LeBauer", role = c("aut", "cre"),
                      email = "dlebauer@email.arizona.edu"),
              person("Mike", "Dietze", role = c("aut"),
@@ -24,7 +23,7 @@ Authors@R: c(person("David", "LeBauer", role = c("aut", "cre"),
              person("Chris", "Black", role = c("aut"),
                      email = "chris@ckblack.org"),
              person("Liam", "Burke", role = c("aut"),
-                     email = "liam.burke24@gmail.com>"),
+                     email = "liam.burke24@gmail.com"),
              person("Ryan", "Kelly", role = c("aut"),
                      email = "rykelly@bu.edu"),
              person("Dan", "Wang", role = c("aut")),
@@ -40,11 +39,12 @@ Description: The Predictive Ecosystem Carbon Analyzer (PEcAn) is a scientific
     model parameterization, execution, and analysis. The goal of PECAn is to
     streamline the interaction between data and models, and to improve the
     efficacy of scientific investigation.
+URL: https://pecanproject.github.io
+BugReports: https://github.com/PecanProject/pecan/issues
 Imports:
-    curl,
     DBI,
-    dbplyr,
-    dplyr,
+    dbplyr (>= 2.4.0),
+    dplyr (>= 1.1.2),
     fs,
     glue,
     lubridate,
@@ -60,31 +60,24 @@ Imports:
     tibble,
     tidyr,
     units,
-    XML
 Suggests:
     bit64,
     data.table,
     here,
-    knitr,
+    knitr (>= 1.42),
+    mockery (>= 0.4.3),
     RPostgreSQL,
     RPostgres,
     RSQLite,
     rcrossref,
     rmarkdown (>= 2.19),
     testthat (>= 2.0.0),
-    tidyverse
-X-Comment-Remotes:
-    Installing markdown from GitHub because as of 2023-02-05, this is the
-    easiest way to get version >= 2.19 onto Docker images that use older
-    Rstudio Package Manager snapshots.
-    When building on a system that finds a new enough version on CRAN,
-    OK to remove the Remotes line and this comment.
-Remotes:
-    github::rstudio/rmarkdown@v2.20
+    tidyverse,
+    withr
 License: BSD_3_clause + file LICENSE
-VignetteBuilder: knitr
+VignetteBuilder: knitr, rmarkdown
 Copyright: Authors
 LazyLoad: yes
 LazyData: FALSE
 Encoding: UTF-8
-RoxygenNote: 7.2.3
+RoxygenNote: 7.3.2

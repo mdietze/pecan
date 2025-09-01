@@ -17,7 +17,7 @@ download.Fluxnet2015(
 }
 \arguments{
 \item{sitename}{the FLUXNET ID of the site to be downloaded, used as file name prefix. 
-The 'SITE_ID' field in \href{http://fluxnet.fluxdata.org//sites/site-list-and-pages/}{list of Ameriflux sites}}
+The 'SITE_ID' field in \href{https://fluxnet.org/sites/site-list-and-pages/}{list of Ameriflux sites}}
 
 \item{outfolder}{location on disk where outputs will be stored}
 
@@ -28,6 +28,10 @@ The 'SITE_ID' field in \href{http://fluxnet.fluxdata.org//sites/site-list-and-pa
 \item{overwrite}{should existing files be overwritten}
 
 \item{verbose}{should the function be very verbose}
+
+\item{username}{login name for Ameriflux}
+
+\item{...}{further arguments, currently ignored}
 }
 \description{
 Download Fluxnet 2015 CSV files

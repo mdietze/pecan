@@ -4,13 +4,15 @@
 \alias{listToXml.default}
 \title{List to XML}
 \usage{
-\method{listToXml}{default}(item, tag)
+\method{listToXml}{default}(x, tag = "pecan", ...)
 }
 \arguments{
-\item{item}{object to be converted.
+\item{x}{object to be converted.
 Despite the function name, need not actually be a list}
 
-\item{tag}{xml tag}
+\item{tag}{name to use for the root tag of the resulting XML tree}
+
+\item{...}{further arguments, currently ignored}
 }
 \value{
 xmlNode

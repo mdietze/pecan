@@ -1,12 +1,3 @@
-#-------------------------------------------------------------------------------
-# Copyright (c) 2015 Boston University, NCSA.
-# All rights reserved. This program and the accompanying materials
-# are made available under the terms of the
-# NCSA Open Source License
-# which accompanies this distribution, and is available at
-# http://opensource.ncsa.illinois.edu/license.html
-#-------------------------------------------------------------------------------
-
 #--------------------------------------------------------------------------------------------------#
 # Template for functions to prepare and write out files model-specific configuration files for MA
 #--------------------------------------------------------------------------------------------------#
@@ -81,10 +72,11 @@ convert.samples.DALEC <- function(trait.samples) {
 ##' write Dalec Configuration files
 ##'
 ##' @title write.config.DALEC
-##' @param defaults
-##' @param trait.values
-##' @param settings
-##' @param run.id
+##' @param defaults ignored
+##' @param trait.values vector of samples for a given trait
+##' @param settings a PEcAn settings object
+##' @param run.id Unique identifier for the run,
+##'  used here to construct output directories and filenames.
 ##' @return configuration files
 ##' @export write.config.DALEC
 write.config.DALEC <- function(defaults, trait.values, settings, run.id) {

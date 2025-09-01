@@ -60,6 +60,7 @@ is.MultiSettings <- function(x) {
       } else if (length(x) == 1 && length(value) > 1) {
         x <- MultiSettings(replicate(length(value), x[[1]], simplify = FALSE))
         x[[i, global = FALSE]] <- value
+        x <- settingNames(x, names(value))
       } else {
         stop("Length mismatch in assigning to MultiSettings")
       }
@@ -105,13 +106,7 @@ is.MultiSettings <- function(x) {
 } # "[[.MultiSettings"
 
 .allListElementsEqual <- function(x) {
-  firstElement <- x[[1]]
-  replicatedFirstElement <- replicate(
-    length(x),
-    firstElement,
-    simplify = FALSE)
-  return(isTRUE(
-    all.equal(replicatedFirstElement, x, check.attributes = FALSE)))
+  all(sapply(x, identical, x[[1]]))
 } # .allListElementsEqual
 
 #' @export
@@ -138,6 +133,11 @@ names.MultiSettings <- function(x) {
   stop("Can't name MultiSettings this way. Use settingNames() instead.")
 }
 
+#' function that can retrieve or update the names of multi-settings.
+#' 
+#' @param multiSettings object for which to retrieve or set the names.
+#' @param settingNames  names to be set for the multi-settings object.
+#' 
 #' @export
 settingNames <- function(multiSettings, settingNames) {
   if (missing(settingNames)) {
@@ -159,6 +159,10 @@ print.MultiSettings <- function(x, printAll = FALSE, ...) {
   }
 }
 
+#' generic function for printing contents of objects.
+#'
+#' @param x object to be printed.
+#'
 #' @export
 printAll <- function(x) {
   UseMethod("printAll", x)
@@ -172,31 +176,34 @@ printAll.MultiSettings <- function(x) {
 .expandableItemsTag <- "multisettings"
 
 #' @export
-listToXml.MultiSettings <- function(item, tag, collapse = TRUE) {
-  if (collapse && length(item) > 1) {
-    if (.expandableItemsTag %in% names(item)) {
+listToXml.MultiSettings <- function(x, tag = "pecan", collapse = TRUE, ...) {
+  if (collapse) {
+    if (.expandableItemsTag %in% names(x)) {
       stop("Settings can't contain reserved tag 'multisettings'.")
     }
 
     tmp <- list()
     expandableItems <- list()
-    for (setting in names(item)) {
-      value <- item[[setting, setAttributes = TRUE]]
+    for (setting in names(x)) {
+      value <- x[[setting, setAttributes = TRUE]]
       tmp[[setting]] <- value
       if (attr(value, "settingType") == "multi") {
         expandableItems <- c(expandableItems, setting)
       }
     }
-    item <- tmp
+    x <- tmp
 
     names(expandableItems) <- rep(.expandableItemsTag, length(expandableItems))
-    item[[.expandableItemsTag]] <- expandableItems
+    x[[.expandableItemsTag]] <- expandableItems
   }
 
   NextMethod()
 } # listToXml.MultiSettings
 
-
+#' generic function for expanding multi-settings.
+#'
+#' @param x object to be expanded.
+#'
 #' @export
 expandMultiSettings <- function(x) {
   UseMethod("expandMultiSettings")

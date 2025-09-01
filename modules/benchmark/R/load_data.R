@@ -1,15 +1,19 @@
-##' @name load_data
-##' @title load_data
-##' @export
-##' @param data.path character
-##' @param format list
-##' @param start_year numeric
-##' @param end_year numeric
-##' @param site list
-##' @author Betsy Cowdery, Istem Fer, Joshua Mantooth
-##' Generic function to convert input files containing observational data to 
-##' a common PEcAn format. 
+#' load data
+#'
+#' Generic function to convert input files containing observational data to
+#' a common PEcAn format.
+#'
+#' @param data.path character
+#' @param format list
+#' @param start_year numeric
+#' @param end_year numeric
+#' @param site list
+#' @param vars.used.index which variables to use? If NULL, these are taken from `format`
+#' @param ... further arguments, currently ignored
+#'
+#' @author Betsy Cowdery, Istem Fer, Joshua Mantooth
 #' @importFrom magrittr %>%
+#' @export
 
 load_data <- function(data.path, format, start_year = NA, end_year = NA, site = NA, 
                       vars.used.index=NULL, ...) {
@@ -39,20 +43,6 @@ load_data <- function(data.path, format, start_year = NA, end_year = NA, site = 
     fcn <- match.fun(fcn1)
   } else if (exists(fcn2)) {
     fcn <- match.fun(fcn2)
-  } else if (!exists(fcn1) & !exists(fcn2) & requireNamespace("BrownDog", quietly = TRUE)) { 
-    #To Do: call to DAP to see if conversion to csv is possible
-    #Brown Dog API call through BDFiddle, requires username and password
-    key   <- BrownDog::get_key("https://bd-api.ncsa.illinois.edu",username,password)
-    token <- BrownDog::get_token("https://bd-api.ncsa.illinois.edu",key)
-    #output_path = where are we putting converted file?
-    converted.data.path <- BrownDog::convert_file(url = "https://bd-api.ncsa.illinois.edu", input_filename = data.path, 
-                                        output = "csv", output_path = output_path, token = token)
-    if (is.na(converted.data.path)){
-      PEcAn.logger::logger.error("Converted file was not returned from Brown Dog")
-    }
-    #not doing anything about mimetypes not convertible by BD right now
-    fcn <- match.fun("load_csv")
-    data.path <- converted.data.path
   } else {
     PEcAn.logger::logger.warn("Brown Dog is currently unable to perform conversion from ",mimetype," to a PEcAn usable format")
   }
@@ -128,13 +118,13 @@ load_data <- function(data.path, format, start_year = NA, end_year = NA, site = 
   # This was part of the arguments but never implemented
   if(!is.na(start_year)){
     out$year <- lubridate::year(out$posix)
-    out <- out %>% filter(.,year >= as.numeric(start_year))
+    out <- out %>% filter(.data$year >= as.numeric(start_year))
     print("subsetting by start year")
   }
   
   if(!is.na(end_year)){
     out$year <- lubridate::year(out$posix)
-    out <- out %>% filter(.,year <= as.numeric(end_year))
+    out <- out %>% filter(.data$year <= as.numeric(end_year))
     print("subsetting by end year")
   }
   

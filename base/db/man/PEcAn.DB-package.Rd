@@ -9,6 +9,14 @@
 This package provides an interface between PEcAn and the BETY database.
 For usage examples, please see \code{vignette("betydb_access")}
 }
+\seealso{
+Useful links:
+\itemize{
+  \item \url{https://pecanproject.github.io}
+  \item Report bugs at \url{https://github.com/PecanProject/pecan/issues}
+}
+
+}
 \author{
 \strong{Maintainer}: David LeBauer \email{dlebauer@email.arizona.edu}
 
@@ -23,7 +31,7 @@ Authors:
   \item Alexey Shiklomanov \email{alexey.shiklomanov@pnnl.gov}
   \item Tony Gardella \email{tonygard@bu.edu}
   \item Chris Black \email{chris@ckblack.org}
-  \item Liam Burke \email{liam.burke24@gmail.com>}
+  \item Liam Burke \email{liam.burke24@gmail.com}
   \item Ryan Kelly \email{rykelly@bu.edu}
   \item Dan Wang
   \item Carl Davidson \email{davids14@illinois.edu}

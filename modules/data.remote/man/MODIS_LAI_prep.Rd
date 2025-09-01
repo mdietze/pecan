@@ -6,34 +6,31 @@
 \usage{
 MODIS_LAI_prep(
   site_info,
-  start_date,
-  end_date,
   time_points,
-  NCore = NULL,
-  run_parallel = FALSE,
   outdir = NULL,
   search_window = 30,
-  export_csv = FALSE
+  export_csv = FALSE,
+  sd_threshold = 20,
+  skip_download = FALSE,
+  boundary = NULL
 )
 }
 \arguments{
-\item{site_info}{Bety list of site info including site_id, lon, and lat.}
+\item{site_info}{list: Bety list of site info including site_id, lon, and lat.}
 
-\item{start_date}{Start date of SDA workflow.}
+\item{time_points}{character: a vector contains each time point within the start and end date.}
 
-\item{end_date}{End date of SDA workflow.}
+\item{outdir}{character: where the final CSV file will be stored.}
 
-\item{time_points}{A vector contains each time point within the start and end date.}
+\item{search_window}{numeric: search window for locate available LAI values.}
 
-\item{NCore}{Number of CPU to be used for LAI extraction.}
+\item{export_csv}{boolean: decide if we want to export the CSV file.}
 
-\item{run_parallel}{Bool variable decide if you want to proceed parallelly.}
+\item{sd_threshold}{numeric or character: for filtering out any estimations with unrealistic high standard error, default is 20. The QC check will be skipped if it's set as NULL.}
 
-\item{outdir}{Where the final CSV file will be stored.}
+\item{skip_download}{boolean: determine if we want to use existing LAI.csv file and skip the MODIS LAI download part.}
 
-\item{search_window}{search window for locate available LAI values.}
-
-\item{export_csv}{Decide if we want to export the CSV file.}
+\item{boundary}{numeric vector or list: the upper and lower quantiles for filtering out noisy LAI values (e.g., c(0.05, 0.95) or list(0.05, 0.95)). The default is NULL.}
 }
 \value{
 A data frame containing LAI and sd for each site and each time step.

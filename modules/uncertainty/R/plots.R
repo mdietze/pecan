@@ -50,42 +50,24 @@ plot_variance_decomposition <- function(plot.inputs,
   
   
   trait.plot <- base.plot + ggplot2::ggtitle("Parameter") + 
-    ggplot2::geom_text(ggplot2::aes(y = 1, x = points, label = trait.labels, hjust = 1), size = fontsize$axis/3) + 
+    ggplot2::geom_text(ggplot2::aes(y = 1, x = .data$points, label = trait.labels, hjust = 1), size = fontsize$axis/3) + 
     ggplot2::scale_y_continuous(breaks = c(0, 0), limits = c(0, 1)) + 
     ggplot2::theme(axis.text.x = ggplot2::element_blank())
   cv.plot <- base.plot + ggplot2::ggtitle("CV (%)") + 
-    ggplot2::geom_pointrange(ggplot2::aes(x = points, y = coef.vars, ymin = 0, ymax = coef.vars), size = 1.25) +
+    ggplot2::geom_pointrange(ggplot2::aes(x = .data$points, y = .data$coef.vars, ymin = 0, ymax = .data$coef.vars), size = 1.25) +
     ggplot2::theme(plot.title = ggplot2::element_text(size = fontsize$title))
   
   el.plot <- base.plot + ggplot2::ggtitle("Elasticity") + 
     ggplot2::theme(plot.title = ggplot2::element_text(size = fontsize$title)) + 
-    ggplot2::geom_pointrange(ggplot2::aes(x = points, y = elasticities, ymin = 0, ymax = elasticities), size = 1.25)
+    ggplot2::geom_pointrange(ggplot2::aes(x = .data$points, y = .data$elasticities, ymin = 0, ymax = .data$elasticities), size = 1.25)
   
   pv.plot <- base.plot + ggplot2::ggtitle("Variance") + 
     ggplot2::theme(plot.title = ggplot2::element_text(size = fontsize$title)) + 
-    ggplot2::geom_pointrange(ggplot2::aes(x = points, sqrt(variances), ymin = 0, ymax = sqrt(variances)), size = 1.25)
+    ggplot2::geom_pointrange(ggplot2::aes(x = .data$points, sqrt(.data$variances), ymin = 0, ymax = sqrt(.data$variances)), size = 1.25)
   
   return(list(trait.plot = trait.plot, cv.plot = cv.plot, el.plot = el.plot, pv.plot = pv.plot))
 } # plot_variance_decomposition
 
-
-format.plot.input <- function(plot.inputs, convert.var, trait.order = c()) {
-  traits <- row.names(as.data.frame(plot.inputs))
-  if (length(trait.order) == 0) {
-    trait.order <- traits
-  }
-  plot.data <- data.frame(traits = traits, 
-                          trait.labels = PEcAn.utils::trait.lookup(traits)$figid, 
-                          units = PEcAn.utils::trait.lookup(traits)$units, 
-                          coef.vars = abs(plot.inputs$coef.vars * 100),
-                          elasticities = (plot.inputs$elasticities), 
-                          variances = convert.var(abs(plot.inputs$variances)))
-  plot.data <- merge(data.frame(traits = trait.order, 
-                                points = seq(trait.order) - 0.5),
-                     plot.data)
-  
-  return(plot.data)
-}
 
 
 ##--------------------------------------------------------------------------------------------------#
@@ -98,11 +80,14 @@ format.plot.input <- function(plot.inputs, convert.var, trait.order = c()) {
 ##' @param sa.sample trait quantiles used in sensitivity analysis 
 ##' @param sa.spline spline function estimated from sensitivity analysis
 ##' @param trait trait name for title
-##' @param y.range 
+##' @param y.range limits for y axis of plot
 ##' @param median.i index of median value in sa.sample; \code{median.i == which(as.numeric(rownames(sa.sample)) == 50) }
 ##' @param prior.sa.sample similar to sa.sample, but for prior distribution. If given, plots sensitivity for prior run
 ##' @param prior.sa.spline similar to sa.spline, but for prior trait distribution. 
 ##' @param fontsize (optional) list with three arguments that can be set to vary the fontsize of the title, axis labels, and axis title in the sensitivity plots
+##' @param linesize passed to ggplot to set line thickness
+##' @param dotsize passed to ggplot to set point size
+##'
 ##' @export
 ##' @return object of class ggplot
 plot_sensitivity <- function(sa.sample, sa.spline, trait, y.range = c(0, 50), median.i = 4, 
@@ -117,11 +102,11 @@ plot_sensitivity <- function(sa.sample, sa.spline, trait, y.range = c(0, 50), me
   post.x <- seq(from = min(sa.sample), to = max(sa.sample), length.out = LENGTH_OUT)
   
   saplot <- saplot + ## plot spline function
-    ggplot2::geom_line(ggplot2::aes(x, y), data = data.frame(x = post.x, y = sa.spline(post.x)), size = linesize) + 
+    ggplot2::geom_line(ggplot2::aes(x=.data$x, y=.data$y), data = data.frame(x = post.x, y = sa.spline(post.x)), size = linesize) + 
     ## plot points used to evaluate spline
-    ggplot2::geom_point(ggplot2::aes(x, y), data = data.frame(x = sa.sample, y = sa.spline(sa.sample)), 
+    ggplot2::geom_point(ggplot2::aes(x=.data$x, y=.data$y), data = data.frame(x = sa.sample, y = sa.spline(sa.sample)), 
                size = dotsize) + # indicate median with larger point
-    ggplot2::geom_point(ggplot2::aes(x, y), data = data.frame(x = sa.sample[median.i], y = sa.spline(sa.sample[median.i])), 
+    ggplot2::geom_point(ggplot2::aes(x = .data$x, y=.data$y), data = data.frame(x = sa.sample[median.i], y = sa.spline(sa.sample[median.i])), 
                size = dotsize * 1.3) + 
     ggplot2::scale_y_continuous(limits = range(pretty(y.range)), breaks = pretty(y.range, n = 3)[1:3]) +
     ggplot2::theme_bw() + 
@@ -138,13 +123,13 @@ plot_sensitivity <- function(sa.sample, sa.spline, trait, y.range = c(0, 50), me
   if (!is.null(prior.sa.sample) & !is.null(prior.sa.spline)) {
     prior.x <- seq(from = min(prior.sa.sample), to = max(prior.sa.sample), length.out = LENGTH_OUT)
     saplot <- saplot + ## plot spline
-      ggplot2::geom_line(ggplot2::aes(x, y), data = data.frame(x = prior.x, y = prior.sa.spline(prior.x)), 
-                size = linesize, color = "grey") + ## plot points used to evaluate spline
-      ggplot2::geom_point(ggplot2::aes(x, y), data = data.frame(x = prior.sa.sample, y = prior.sa.spline(prior.sa.sample)), 
-                 size = dotsize, color = "grey") + ## indicate location of medians
-      ggplot2::geom_point(ggplot2::aes(x, y), data = data.frame(x = prior.sa.sample[median.i], y = prior.sa.spline(prior.sa.sample[median.i])), 
-                 size = dotsize * 1.5, color = "grey")
-  }    
+      ggplot2::geom_line(ggplot2::aes(x = .data$x, y= .data$y), data = data.frame(x = prior.x, y = prior.sa.spline(prior.x)), 
+                         size = linesize, color = "grey") + ## plot points used to evaluate spline
+      ggplot2::geom_point(ggplot2::aes(x= .data$x, y= .data$y), data = data.frame(x = prior.sa.sample, y = prior.sa.spline(prior.sa.sample)), 
+                          size = dotsize, color = "grey") + ## indicate location of medians
+      ggplot2::geom_point(ggplot2::aes(x = .data$x, y= .data$y), data = data.frame(x = prior.sa.sample[median.i], y = prior.sa.spline(prior.sa.sample[median.i])), 
+                          size = dotsize * 1.5, color = "grey")
+  }
   max.x <- max(prior.x)
   min.x <- min(prior.x)
   x.breaks <- pretty(c(min.x, max.x), 2)
@@ -158,12 +143,10 @@ plot_sensitivity <- function(sa.sample, sa.spline, trait, y.range = c(0, 50), me
 ##' Plot functions and quantiles used in sensitivity analysis
 ##'
 ##' Generates a plot using \code{\link{plot_sensitivity}} for multiple traits.
-##' @name plot_sensitivities 
-##' @title Plot Sensitivities
+##'
 ##' @param sensitivity.plot.inputs inputs
 ##' @param prior.sensitivity.plot.inputs priors
 ##' @param ... arguments passed to \code{\link{plot_sensitivity}}
-##' @param sensitivity.results list containing sa.samples and sa.splines
 ##' @export
 ##' @return list of plots, one per trait
 plot_sensitivities <- function(sensitivity.plot.inputs, 

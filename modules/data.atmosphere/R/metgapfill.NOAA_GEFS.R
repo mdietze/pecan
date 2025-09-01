@@ -1,19 +1,21 @@
-##'@title Gapfill NOAA_GEFS weather data
-##'@section Purpose:
-##'This function uses simple methods to gapfill NOAA GEFS met data
-##'Temperature and Precipitation are gapfilled with spline; other data sources are gapfilled with
-##'using linear models fitted to other fitted data.
-##'
-##'@param in.prefix the met file name
-##'@param in.path The location of the file
-##'@param outfolder The place to write the output file to
-##'@param start_date The start date of the contents of the file
-##'@param end_date The end date of the contents of the file
-##'@param overwrite Whether or not to overwrite the output file if it exists or not
-##'@param verbose Passed to nc writing functions for additional output
-##'@export
-##'
-##'@author Luke Dramko
+#' Gapfill NOAA_GEFS weather data
+#'
+#' This function uses simple methods to gapfill NOAA GEFS met data.
+#' Temperature and Precipitation are gapfilled with splines;
+#'  other data sources are gapfilled using linear models fitted to
+#'  other fitted data.
+#'
+#' @param in.prefix the met file name
+#' @param in.path The location of the file
+#' @param outfolder The place to write the output file to
+#' @param start_date The start date of the contents of the file
+#' @param end_date The end date of the contents of the file
+#' @param overwrite Whether or not to overwrite the output file if it exists or not
+#' @param verbose Passed to nc writing functions for additional output
+#' @param ... further arguments, currently ignored
+#'
+#' @author Luke Dramko
+#' @export
 metgapfill.NOAA_GEFS <- function(in.prefix, in.path, outfolder, start_date, end_date,
                                  overwrite = FALSE, verbose = FALSE, ...) {
   
@@ -78,7 +80,7 @@ metgapfill.NOAA_GEFS <- function(in.prefix, in.path, outfolder, start_date, end_
   for (i in 1:nrow(allvars)) {
     for (j in k:ncol(allvars)) {
       if (is.na(allvars[i,j])) {
-        allvars[i,j] = sample(na.omit(allvars[i,seq(j, 1, by = -4)]), 1)
+        allvars[i,j] = sample(stats::na.omit(allvars[i,seq(j, 1, by = -4)]), 1)
       }
     }
   }
@@ -114,22 +116,22 @@ metgapfill.NOAA_GEFS <- function(in.prefix, in.path, outfolder, start_date, end_
     # Unfortunately, R is picky, and the data.frame[['var_as_string']] notation doesn't work
     # for the lm function; only the $ notation does, hence this if/else if section.
     if (dependent_vars[i] == "specific_humidity") {
-      reg <- lm(fitted.data$specific_humidity ~.,fitted.data)
+      reg <- stats::lm(fitted.data$specific_humidity ~.,fitted.data)
     } else if (dependent_vars[i] == "surface_downwelling_longwave_flux_in_air") {
-      reg <- lm(fitted.data$surface_downwelling_longwave_flux_in_air ~.,fitted.data)
+      reg <- stats::lm(fitted.data$surface_downwelling_longwave_flux_in_air ~.,fitted.data)
     } else if (dependent_vars[i] == "surface_downwelling_shortwave_flux_in_air") {
-      reg <- lm(fitted.data$surface_downwelling_shortwave_flux_in_air ~.,fitted.data)
+      reg <- stats::lm(fitted.data$surface_downwelling_shortwave_flux_in_air ~.,fitted.data)
     } else if (dependent_vars[i] == "air_pressure") {
-      reg <- lm(fitted.data$air_pressure ~.,fitted.data)
+      reg <- stats::lm(fitted.data$air_pressure ~.,fitted.data)
     } else if (dependent_vars[i] == "eastward_wind") {
-      reg <- lm(fitted.data$eastward_wind ~.,fitted.data)
+      reg <- stats::lm(fitted.data$eastward_wind ~.,fitted.data)
     } else if (dependent_vars[i] == "northward_wind") {
-      reg <- lm(fitted.data$northward_wind ~.,fitted.data)
+      reg <- stats::lm(fitted.data$northward_wind ~.,fitted.data)
     }else if (dependent_vars[i] == "wind_speed") {
-      reg <- lm(fitted.data$wind_speed ~.,fitted.data)
+      reg <- stats::lm(fitted.data$wind_speed ~.,fitted.data)
     }
   
-    prediction <- predict(reg, fitted.data)
+    prediction <- stats::predict(reg, fitted.data)
     
     # Update the values in the data frame
     for (j in 1:length(prediction)) {

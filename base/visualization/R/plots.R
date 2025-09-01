@@ -1,12 +1,3 @@
-#-------------------------------------------------------------------------------
-# Copyright (c) 2012 University of Illinois, NCSA.
-# All rights reserved. This program and the accompanying materials
-# are made available under the terms of the 
-# University of Illinois/NCSA Open Source License
-# which accompanies this distribution, and is available at
-# http://opensource.ncsa.illinois.edu/license.html
-#-------------------------------------------------------------------------------
-
 ##' Variable-width (diagonally cut) histogram
 ##'
 ##' When constructing a histogram, it is common to make all bars the same width.
@@ -188,7 +179,7 @@ iqr <- function(x) {
 ##'
 ##' Used to add raw data or summary statistics to the plot of a distribution.
 ##' The height of Y is arbitrary, and can be set to optimize visualization.
-##' If SE estimates are available, the se wil be plotted
+##' If SE estimates are available, the SE will be plotted
 ##' @name plot_data
 ##' @aliases plot.data
 ##' @title Add data to plot 
@@ -263,7 +254,7 @@ plot_data <- function(trait.data, base.plot = NULL, ymax) {
 ##' 
 ##' @return adds borders to ggplot as a side effect
 ##' @author Rudolf Cardinal
-##' @author \url{ggplot2 google group}{https://groups.google.com/forum/?fromgroups#!topic/ggplot2/-ZjRE2OL8lE}
+##' @author [ggplot2 google group](https://groups.google.com/forum/?fromgroups#!topic/ggplot2/-ZjRE2OL8lE)
 ##' @examples
 ##' \dontrun{
 ##' df = data.frame( x=c(1,2,3), y=c(4,5,6) )

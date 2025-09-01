@@ -103,13 +103,18 @@ SDA_timeseries_plot(
     "kg/m2"),
   style = list(general_color = c(FORECAST = "blue", ANALYSIS = "red", OBS = "black"),
     fill_color = c(FORECAST = "yellow", ANALYSIS = "green", OBS = "grey"), title_color =
-    "red")
+    "red"),
+  PDF_w = 20,
+  PDF_h = 16,
+  t.inds = NULL
 )
 }
 \arguments{
 \item{settings}{pecan standard settings list.}
 
 \item{t}{current time - int number giving the position of the current time in obs.time.}
+
+\item{obs.times}{vector of dates of measurements}
 
 \item{obs.mean}{obs.mean}
 
@@ -123,7 +128,13 @@ SDA_timeseries_plot(
 
 \item{ANALYSIS}{Analysis object from the sda.output.Rdata.}
 
+\item{aqq, bqq}{shape parameters estimated over time for the process covariance}
+
 \item{plot.title}{character giving the title for post visualization ggplots}
+
+\item{facetg}{logical: Create a subpanel for each variable?}
+
+\item{readsFF}{optional forward forecast}
 
 \item{Add_Map}{Bool variable decide if we want to export the GIS map of Ecoregion.}
 
@@ -141,7 +152,11 @@ SDA_timeseries_plot(
 
 \item{style}{color option.}
 
-\item{obs.time}{vector of dates of measurements}
+\item{PDF_w}{width of exported PDF file, passed on to `base::pdf()`.}
+
+\item{PDF_h}{height of exported PDF file, passed on to `base::pdf()`.}
+
+\item{t.inds}{index of period that will be plotted.}
 }
 \description{
 Internal functions for plotting SDA outputs. Interactive, post analysis time-series and bias plots in base plotting system and ggplot

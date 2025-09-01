@@ -1,4 +1,14 @@
-# PEcAn.DB 1.7.2.9000
+# PEcAn.DB 1.8.1
+
+## License change
+* PEcAn.DB is now distributed under the BSD three-clause license instead of the NCSA Open Source license.
+
+## Changed
+* Fixed several cases where `dbfile.input.insert` continued instead of returning early
+* Removed support for Browndog because the service is defunct 
+
+
+# PEcAn.DB 1.8.0
 
 ## Added
 
@@ -8,6 +18,7 @@
 * New function `convert_input`, used to convert between formats while reusing
   existing files where possible. It previously lived in package `PEcAn.utils`,
   but was moved here to simplify dependencies. (#3026; @nanu1605)
+* `get.trait.data` gains new argument `write` (with default FALSE), passed on to `get.trait.data.pft` (@Aariq, #3065).
 
 # PEcAn.DB 1.7.2
 

@@ -1,12 +1,3 @@
-##-----------------------------------------------------------------------------
-## Copyright (c) 2012 University of Illinois, NCSA.
-## All rights reserved. This program and the accompanying materials
-## are made available under the terms of the
-## University of Illinois/NCSA Open Source License
-## which accompanies this distribution, and is available at
-## http://opensource.ncsa.illinois.edu/license.html
-##-----------------------------------------------------------------------------
-
 #' Cleans PEcAn settings file
 #'
 #' This will try and clean the settings file so it is ready for
@@ -15,6 +6,7 @@
 #' @param inputfile the PEcAn settings file to be used.
 #' @param outputfile the name of file to which the settings will be
 #'        written inside the outputdir.
+#' @param write Indicates whether to write the modified settings to a file.
 #' @return list of all settings as saved to the XML file(s)
 #' @export clean.settings
 #' @author Rob Kooper

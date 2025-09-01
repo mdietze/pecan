@@ -1,19 +1,21 @@
+SHELL = /bin/bash
 NCPUS ?= 1
 
 BASE := logger utils db settings visualization qaqc remote workflow
 
 MODELS := basgra biocro clm45 dalec dvmdostem ed fates gday jules linkages \
-				ldndc lpjguess maat maespa preles sibcasa sipnet stics template
+				ldndc lpjguess maat maespa sibcasa sipnet stics template
 
 MODULES := allometry assim.batch assim.sequential benchmark \
-				 data.atmosphere data.hydrology data.land \
-				 data.remote emulator meta.analysis \
+				 data.atmosphere data.land data.remote \
+				 emulator meta.analysis \
 				 photosynthesis priors rtm uncertainty
 
 # Components not currently included in the build
 # (Most need more development first)
-# 	models: cable
-#	modules: data.mining, DART
+# If you need one of these on your system, add it to the appropriate line above.
+# MODELS: cable preles
+# MODULES: data.mining DART
 
 SHINY := $(dir $(wildcard shiny/*/.))
 SHINY := $(SHINY:%/=%)
@@ -44,9 +46,11 @@ MODELS_D := $(MODELS:%=.doc/%)
 MODULES_D := $(MODULES:%=.doc/%)
 ALL_PKGS_D := $(BASE_D) $(MODULES_D) $(MODELS_D)
 
+SRCS_TO_CLEAN := $(strip $(foreach d,$(ALL_PKGS),$(wildcard ${d}/src)))
+
 SETROPTIONS := "options(Ncpus = ${NCPUS})"
 
-EXPECTED_ROXYGEN_VERSION := 7.2.3
+EXPECTED_ROXYGEN_VERSION := 7.3.2
 INSTALLED_ROXYGEN_VERSION := $(shell Rscript \
 	-e "if (requireNamespace('roxygen2', quietly = TRUE)) {" \
 	-e   "cat(as.character(packageVersion('roxygen2')))" \
@@ -67,6 +71,11 @@ drop_parents = $(filter-out $(patsubst %/,%,$(dir $1)), $1)
 # Generates a list of regular files at any depth inside its argument
 files_in_dir = $(call drop_parents, $(call recurse_dir, $1))
 
+# Git hash + clean status for this directory
+git_rev = $(shell \
+	CLEAN=$$([[ -n $$(git status -s $1) ]] && echo "+mod"); \
+	echo $$(git rev-parse --short=10 HEAD)"$$CLEAN")
+
 # HACK: NA vs TRUE switch on dependencies argument is an ugly workaround for
 # a circular dependency between benchmark and data.land.
 # When this is fixed, can go back to simple `dependencies = TRUE`
@@ -74,7 +83,8 @@ depends_R_pkg = ./scripts/time.sh "depends ${1}" ./scripts/confirm_deps.R ${1} \
 	$(if $(findstring modules/benchmark,$(1)),NA,TRUE)
 install_R_pkg = ./scripts/time.sh "install ${1}" Rscript \
 	-e ${SETROPTIONS} \
-	-e "devtools::install('$(strip $(1))', upgrade=FALSE)"
+	-e "Sys.setenv(PECAN_GIT_REV='$(call git_rev,$1)')" \
+	-e "remotes::install_local('$(strip $(1))', force=TRUE, dependencies=FALSE, upgrade=FALSE)"
 check_R_pkg = ./scripts/time.sh "check ${1}" Rscript scripts/check_with_errors.R $(strip $(1))
 test_R_pkg = ./scripts/time.sh "test ${1}" Rscript \
 	-e "devtools::test('$(strip $(1))'," \
@@ -93,35 +103,70 @@ doc_R_pkg = \
 
 depends = .doc/$(1) .install/$(1) .check/$(1) .test/$(1)
 
-
 ### Rules
 
-.PHONY: all install check test document shiny \
-            check_base check_models check_modules 
+.PHONY: all install check test document clean shiny pkgdocs \
+            check_base check_models check_modules help
 
 all: install document
 
-
-check_base: $(BASE_C) 
-check_models: $(MODELS_C) 
-
-# Install base first as Modules has a circular dependency on base,
-# and then run a check on modules
-check_modules: $(BASE_I) $(MODULES_C) 
+# Note: Installs base first as Modules has a circular dependency on base
+check_base: $(BASE_C)
+check_models: $(MODELS_C)
+check_modules: $(BASE_I) $(MODULES_C)
 
 document: $(ALL_PKGS_D) .doc/base/all
+
+pkgdocs:
+	Rscript scripts/build_pkgdown.R $(ALL_PKGS) base/all || exit 1
+	
+
 install: $(ALL_PKGS_I) .install/base/all
 check: $(ALL_PKGS_C) .check/base/all
 test: $(ALL_PKGS_T) .test/base/all
 shiny: $(SHINY_I)
 
-# Render the PEcAn bookdown documentation
-book:
+book: 
 	cd ./book_source && make build
 
 # Make the timestamp directories if they don't exist yet
 .doc .install .check .test .shiny_depends $(call depends,base) $(call depends,models) $(call depends,modules):
 	mkdir -p $@
+
+clean:
+	rm -rf .install .check .test .doc
+	for p in $(SRCS_TO_CLEAN); do \
+		find "$$p" \( -name \*.mod -o -name \*.o -o -name \*.so \) -delete; \
+	done
+
+help:
+	@echo "Usage: make [target]"
+	@echo ""
+	@echo "Examples:"
+	@echo "  make all"
+	@echo "  make document"
+	@echo "  make .doc/modules/assim.sequential  # Generate documentation for a specific package"
+	@echo ""
+	@echo "Notes:"
+	@echo "  - Components not included by default: cable and preles (models), data.mining and DART (modules)."
+	@echo "      To install any of these, see comments in the Makefile and be aware they may need code updates."
+	@echo "  - Standard workflow: install packages, run checks, test, and document before submitting a PR."
+	@echo "  - Before submitting a PR, please ensure that all tests pass, code is linted, and documentation is up-to-date."
+	@echo ""
+	@echo "Available targets:"
+	@echo "  all            Install all packages and generate documentation"
+	@echo "  check_base     Run R package checks on all in base/"
+	@echo "  check_models   Run R package checks on all in models/"
+	@echo "  check_modules  Run R package checks on all in modules/"
+	@echo "  document       Generate function documentation for packages"
+	@echo "  install        Install all packages"
+	@echo "  check          Run R package checks on all packages"
+	@echo "  test           Run unit tests on all packages"
+	@echo "  shiny          Install dependencies for Shiny apps"
+	@echo "  book           Render the PEcAn bookdown documentation"
+	@echo "  pkgdocs        Build package documentation websites using pkgdown"
+	@echo "  clean          Remove build artifacts"
+	@echo "  help           Show this help message"
 
 ### Dependencies
 
@@ -132,18 +177,7 @@ $(subst .doc/models/template,,$(MODELS_D)): .install/models/template
 ### Order-only dependencies
 # (i.e. prerequisites must exist before building target, but
 # target need not be rebuilt when a prerequisite changes)
-
-.doc/base/all: | $(ALL_PKGS_D)
-.install/base/all: | $(ALL_PKGS_I)
-.check/base/all: | $(ALL_PKGS_C)
-.test/base/all: | $(ALL_PKGS_T)
-
 include Makefile.depends
-
-clean:
-	rm -rf .install .check .test .doc
-	find modules/rtm/src \( -name \*.mod -o -name \*.o -o -name \*.so \) -delete
-	find models/basgra/src \( -name \*.mod -o -name \*.o -o -name \*.so \) -delete
 
 .install/devtools: | .install
 	+ ./scripts/time.sh "devtools ${1}" Rscript -e ${SETROPTIONS} -e "if(!requireNamespace('devtools', quietly = TRUE)) install.packages('devtools')"
@@ -152,10 +186,11 @@ clean:
 .install/roxygen2: | .install .install/devtools
 	+ ./scripts/time.sh "roxygen2 ${1}" Rscript -e ${SETROPTIONS} \
 		-e "if (!requireNamespace('roxygen2', quietly = TRUE)" \
-		-e "    || packageVersion('roxygen2') != '7.2.3') {" \
-		-e "  devtools::install_github('r-lib/roxygen2@v7.2.3')" \
+		-e "    || packageVersion('roxygen2') != '"${EXPECTED_ROXYGEN_VERSION}"') {" \
+		-e "  cran <- c(getOption('repos'), 'cloud.r-project.org')" \
+		-e "  remotes::install_version('roxygen2', '"${EXPECTED_ROXYGEN_VERSION}"', repos = cran, upgrade = FALSE)" \
 		-e "}"
-	$(eval INSTALLED_ROXYGEN_VERSION := 7.2.3)
+	$(eval INSTALLED_ROXYGEN_VERSION := ${EXPECTED_ROXYGEN_VERSION})
 	echo `date` > $@
 
 .install/testthat: | .install

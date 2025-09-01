@@ -1,0 +1,4 @@
+contrib
+data-raw
+^docs$
+.*venv/

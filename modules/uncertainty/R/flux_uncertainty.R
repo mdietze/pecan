@@ -8,13 +8,13 @@
 #-------------------------------------------------------------------------------
 
 #--------------------------------------------------------------------------------------------------#
-##' Read Ameriflux L2 Data
-##' 
-##' @name read.ameriflux.L2
-##' @title Read Ameriflux L2 Data
-##' @return Ameriflux L2 data read from file
-##' @export
-##' @author Mike Dietze, Carl Davidson
+#' Read Ameriflux L2 Data
+#' 
+#' @param file.name path to file
+#' @param year currently ignored
+#' @return Ameriflux L2 data read from file
+#' @export
+#' @author Mike Dietze, Carl Davidson
 read.ameriflux.L2 <- function(file.name, year) {
   data <- as.data.frame(utils::read.table(file.name, header = TRUE, sep = ",", 
                                    na.strings = c("-9999", "-6999"), 
@@ -26,8 +26,7 @@ read.ameriflux.L2 <- function(file.name, year) {
 
 ##' Get delta between sequential flux datapoints
 ##' 
-##' @name get.change
-##' @title Get delta between sequential flux datapoints
+##' @param measurement numeric vector
 ##' @return Difference between consecutive measurements
 ##' @export
 ##' @author Mike Dietze, Carl Davidson
@@ -53,6 +52,7 @@ get.change <- function(measurement) {
 ##' @param bin.num = number of bins (default = 10)
 ##' @param transform = transformation of magnitude (default = identity)
 ##' @param minBin = minimum number of points allowed in a bin
+##' @param ... additional arguments, currently ignored
 ##' @return return.list List of parameters from the fitted uncertainty model
 ##' @export
 ##' @author Mike Dietze, Carl Davidson
@@ -159,8 +159,8 @@ plot_flux_uncertainty <- function(f, ...) {
 } # plot_flux_uncertainty
 
 
-plot.oechel.flux <- function(observations, site) {
-  par(mfrow = c(2, 2))
+plot_oechel_flux <- function(observations, site) {
+  graphics::par(mfrow = c(2, 2))
   # only use data from March 1 through November 1
   observations <- observations[observations$DOY > 60 & observations$DOY < 305, ]
   
@@ -187,7 +187,7 @@ plot.oechel.flux <- function(observations, site) {
                         main = site, xlab = "Soil Temp bin (+)", ylab = "Soil Temp random error")
   plot_flux_uncertainty(observations$TS1[observations$TS1 <= 0], flags = flags, 
                         main = site, xlab = "Soil Temp bin (-)", ylab = "Soil Temp random error")
-} # plot.oechel.flux
+} # plot_oechel_flux
 
 
 tundra.flux.uncertainty <- function() {
@@ -216,7 +216,7 @@ tundra.flux.uncertainty <- function() {
     return(read.ameriflux.L2(file, year))
   })
   oechel.atqasuk <- do.call(rbind, oechel.atqasuk)
-  plot.oechel.flux(oechel.atqasuk, "Atqasuk")
+  plot_oechel_flux(oechel.atqasuk, "Atqasuk")
   plot_flux_uncertainty(itex.climate$wfv[itex.climate$site %in% c("AD")], 
                         main = "Atqasuk", 
                         xlab = "Soil Moisture bin (%vol)", 
@@ -228,7 +228,7 @@ tundra.flux.uncertainty <- function() {
     return(read.ameriflux.L2(file, year))
   })
   oechel.barrow <- do.call(rbind, oechel.barrow)
-  plot.oechel.flux(oechel.barrow, "Barrow")
+  plot_oechel_flux(oechel.barrow, "Barrow")
   return(plot_flux_uncertainty(itex.climate$wfv[itex.climate$site %in% c("BD")],
                                main = "Barrow", 
                                xlab = "Soil Moisture bin (%vol)", 

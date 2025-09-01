@@ -9,14 +9,15 @@ start_date <- "2012/01/01"
 end_date <- "2021/12/31"
 
 #setup working space
-outdir <- "/projectnb/dietzelab/dongchen/All_NEON_SDA/NEON42/SDA"
-SDA_run_dir <- "/projectnb/dietzelab/dongchen/All_NEON_SDA/NEON42/SDA/run"
-SDA_out_dir <- "/projectnb/dietzelab/dongchen/All_NEON_SDA/NEON42/SDA/out"
+outdir <- "/projectnb/dietzelab/dongchen/anchorSites/SDA/"
+SDA_run_dir <- "/projectnb/dietzelab/dongchen/anchorSites/SDA/run/"
+SDA_out_dir <- "/projectnb/dietzelab/dongchen/anchorSites/SDA/out/"
 
-ERA5_dir <- "/projectnb/dietzelab/dongchen/All_NEON_SDA/NEON42/ERA5_2012_2021/"
-XML_out_dir <- "/projectnb/dietzelab/dongchen/All_NEON_SDA/NEON42/SDA/pecan.xml"
+ERA5_dir <- "/projectnb/dietzelab/dongchen/anchorSites/ERA5_2012_2021/"
+XML_out_dir <- "/projectnb/dietzelab/dongchen/anchorSites/SDA/pecan.xml"
 
-pft_csv_dir <- "/projectnb/dietzelab/dongchen/All_NEON_SDA/NEON42/site_pft.csv"
+pft_csv_dir <- "/projectnb/dietzelab/dongchen/anchorSites/site_pft.csv"
+modis_phenology_dir <- "/projectnb/dietzelab/Cherry/pft_files/leaf_phenology.csv"
 
 #Obs_prep part
 #AGB
@@ -30,6 +31,9 @@ LAI_search_window <- 30
 LAI_timestep <- list(unit="year", num=1)
 LAI_export_csv <- TRUE
 run_parallel <- TRUE
+sd_threshold <- 20
+upper_quantile <- 0.95
+lower_quantile <- 0.05
 
 #SMP
 SMP_search_window <- 30
@@ -44,9 +48,51 @@ SoilC_export_csv <- TRUE
 #Obs Date
 obs_start_date <- "2012-07-15"
 obs_end_date <- "2021-07-15"
-obs_outdir <- "/projectnb/dietzelab/dongchen/All_NEON_SDA/test_OBS"
+obs_outdir <- "/projectnb/dietzelab/dongchen/anchorSites/Obs"
 timestep <- list(unit="year", num=1)
 
+#specify model binary
+model_binary <- "/usr2/postdoc/istfer/SIPNET/trunk//sipnet_if"
+
+#specify host section
+host.flag <- "local"
+if (host.flag == "remote") {
+  #if we submit jobs through tunnel remotely.
+  host = structure(list(
+    name = "geo.bu.edu",
+    usr = "zhangdc",
+    folder = SDA_out_dir,
+    prerun = "module load R/4.1.2",
+    cdosetup = "module load cdo/2.0.6",
+    qsub = "qsub -l h_rt=24:00:00 -q &apos;geo*&apos; -N @NAME@ -o @STDOUT@ -e @STDERR@ -S /bin/bash",
+    qsub.jobid = "Your job ([0-9]+) .*",
+    qstat = "qstat -j @JOBID@ || echo DONE",
+    tunnel = "~/Tunnel/Tunnel",
+    outdir = SDA_out_dir,
+    rundir = SDA_run_dir
+  ))
+} else if (host.flag == "local") {
+  host = structure(list(
+    name = "localhost",
+    folder = SDA_out_dir,
+    outdir = SDA_out_dir,
+    rundir = SDA_run_dir
+  ))
+} else if (host.flag == "rabbitmq") {
+  host = structure(list(
+    name = "localhost",
+    rabbitmq = structure(list(
+      uri = "amqp://guest:guest@pecan-rabbitmq:15672/%2F",
+      queue = "SIPNET_r136",
+      cp2cmd = "oc rsync @RUNDIR@ $(oc get pod -l app.kubernetes.io/name=pecan-model-sipnet-136 -o name):@RUNDIR@",
+      cpfcmd = "/data/bin/oc rsync @OUTDIR@ $(/data/bin/oc get pod -l app=dongchen-sda -o name):@OUTDIR@"
+    )),
+    folder = SDA_out_dir,
+    outdir = SDA_out_dir,
+    rundir = SDA_run_dir
+  ))
+  model_binary <- "/usr/local/bin/sipnet.r136"
+}
 #Start building template
 template <- PEcAn.settings::Settings(list(
   ############################################################################
@@ -58,20 +104,25 @@ template <- PEcAn.settings::Settings(list(
   ############################################################################
   state.data.assimilation = structure(list(
     process.variance = TRUE,
+    aqq.Init = 1,
+    bqq.Init = 1,
     adjustment = TRUE,
     censored.data = FALSE,
+    free.run = FALSE,
     FullYearNC = TRUE,
     NC.Overwrite = FALSE,
     NC.Prefix = "sipnet.out",
-    q.type = "SINGLE",
+    q.type = "vector",
+    by.site = FALSE,
     Localization.FUN = "Local.support",
     scalef = 1,
-    chains = 5,
+    chains = 1,
     data = structure(list(format_id = 1000000040, input.id = 1000013298)),
     state.variables = structure(list(
       #you could add more state variables here
       variable = structure(list(variable.name = "AbvGrndWood", unit = "MgC/ha", min_value = 0, max_value = 9999)),
       variable = structure(list(variable.name = "LAI", unit = "", min_value = 0, max_value = 9999)),
+      variable = structure(list(variable.name = "SoilMoist", unit = "kg/m^2", min_value = 0, max_value = 1000)),
       variable = structure(list(variable.name = "SoilMoistFrac", unit = "", min_value = 0, max_value = 1)),#soilWFracInit
       variable = structure(list(variable.name = "TotSoilCarb", unit = "kg/m^2", min_value = 0, max_value = 9999))
     )),
@@ -81,7 +132,8 @@ template <- PEcAn.settings::Settings(list(
     
     Obs_Prep = structure(list(
       Landtrendr_AGB = structure(list(AGB_indir = AGB_indir, timestep = AGB_timestep, allow_download = allow_download, export_csv = AGB_export_csv)),
-      MODIS_LAI = structure(list(search_window = LAI_search_window, timestep = LAI_timestep, export_csv = LAI_export_csv, run_parallel = run_parallel)),
+      MODIS_LAI = structure(list(search_window = LAI_search_window, timestep = LAI_timestep, export_csv = LAI_export_csv, run_parallel = run_parallel,
+                                 sd_threshold = sd_threshold, boundary = structure(list(upper_quantile = upper_quantile, lower_quantile = lower_quantile)))),
       SMAP_SMP = structure(list(search_window = SMP_search_window, timestep = SMP_timestep, export_csv = SMP_export_csv, update_csv = update_csv)),
       Soilgrids_SoilC = structure(list(timestep = SoilC_timestep, export_csv = SoilC_export_csv)),
       start.date = obs_start_date,
@@ -123,7 +175,7 @@ template <- PEcAn.settings::Settings(list(
   ###########################################################################
   database = structure(list(
     bety = structure(
-      list(user = "bety", password = "bety", host = "128.197.168.114",
+      list(user = "bety", password = "bety", host = "10.241.76.27",
            dbname = "bety", driver = "PostgreSQL", write = "FALSE"
       ))
   )),
@@ -177,7 +229,8 @@ template <- PEcAn.settings::Settings(list(
   ###########################################################################
   ensemble = structure(list(size = 25, variable = "NPP", 
                             samplingspace = structure(list(
-                              parameters = structure(list(method = "lhc")),
+                              parameters = structure(list(method = "sampling")),
+                              soil_physics = structure(list(method = "sampling")),
                               met = structure(list(method = "sampling"))
                             ))
   )),
@@ -193,7 +246,7 @@ template <- PEcAn.settings::Settings(list(
                          type = "SIPNET",
                          revision = "ssr",
                          delete.raw = FALSE,
-                         binary = "/usr2/postdoc/istfer/SIPNET/trunk//sipnet_if",
+                         binary = model_binary,
                          jobtemplate = "~/sipnet_geo.job"
   )),
   
@@ -205,19 +258,7 @@ template <- PEcAn.settings::Settings(list(
   ###########################################################################
   ###########################################################################
   #be carefull of the host section, you need to specify the host of your own!!!
-  host = structure(list(
-    name = "geo.bu.edu",
-    usr = "zhangdc",
-    folder = "/projectnb/dietzelab/dongchen/All_NEON_SDA/NEON42/SDA/out",
-    prerun = "module load R/4.1.2",
-    cdosetup = "module load cdo/2.0.6",
-    qsub = "qsub -l h_rt=24:00:00 -q &apos;geo*&apos; -N @NAME@ -o @STDOUT@ -e @STDERR@ -S /bin/bash",
-    qsub.jobid = "Your job ([0-9]+) .*",
-    qstat = "qstat -j @JOBID@ || echo DONE",
-    tunnel = "~/Tunnel/Tunnel",
-    outdir = "/projectnb/dietzelab/dongchen/All_NEON_SDA/NEON42/SDA/out",
-    rundir = "/projectnb/dietzelab/dongchen/All_NEON_SDA/NEON42/SDA/run"
-  )),
+  host = host,
   
   ############################################################################
   ############################################################################
@@ -256,7 +297,8 @@ template <- PEcAn.settings::Settings(list(
       #                               )),
       # soilinitcond = structure(list(path = "/projectnb/dietzelab/ahelgeso/EFI_Forecast_Challenge/"
       #                               )),
-      pft.site = structure(list(path = "/projectnb/dietzelab/dongchen/All_NEON_SDA/NEON42/site_pft.csv"))
+      pft.site = structure(list(path = pft_csv_dir)),
+      leaf_phenology = structure(list(path = modis_phenology_dir))
     ))
   ))
 ))
@@ -269,8 +311,8 @@ template <- PEcAn.settings::Settings(list(
 ############################################################################
 ############################################################################
 
-sitegroupId <- 1000000031
-nSite <- 39
+sitegroupId <- 1000000033
+nSite <- 330
 
 multiRunSettings <- PEcAn.settings::createSitegroupMultiSettings(
   template,
@@ -279,6 +321,9 @@ multiRunSettings <- PEcAn.settings::createSitegroupMultiSettings(
 if(file.exists(XML_out_dir)){
   unlink(XML_out_dir)
 }
+
+
+
 PEcAn.settings::write.settings(multiRunSettings, outputfile = "pecan.xml")
 
 #here we re-read the xml file to fix issues of some special character within the Host section.
@@ -287,29 +332,6 @@ tmp = gsub("&amp;","&",tmp)
 writeChar(tmp, XML_out_dir)
 
 settings <- PEcAn.settings::read.settings(XML_out_dir)
-
-#iteratively grab ERA5 paths for each site
-for (i in 1:nSite) {
-  temp_ERA5_path <- settings[[i]]$run$inputs$met$path
-  temp_site_id <- settings[[i]]$run$site$id
-  temp_full_paths <- list.files(path=paste0(temp_ERA5_path, temp_site_id), pattern = '*.clim', full.names = T)
-  
-  #need a better way to code it up
-  #test works!!!!
-  #populated IC file paths into settings
-  Create_mult_list <- function(list.names, paths){
-    out <- as.list(paths)
-    names(out) <- list.names
-    out
-  }
-  settings[[i]]$run$inputs$met$path <- Create_mult_list(rep("path", length(temp_full_paths)), temp_full_paths)
-  
-  #code on met_start and met_end
-  settings[[i]]$run$site$met.start <- start_date
-  settings[[i]]$run$site$met.end <- end_date
-  settings[[i]]$run$start.date <- start_date
-  settings[[i]]$run$end.date <- end_date
-}
 
 #add Lat and Lon to each site
 #grab Site IDs from settings
@@ -333,6 +355,26 @@ for (i in 1:nSite) {
   settings[[i]]$run$site$lon <- site_info$lon[index_site_info]
   settings[[i]]$run$site$name <- site_info$sitename[index_site_info]#temp_ID
 }
+
+#remove overlapped sites
+site.locs <- settings$run %>% 
+  purrr::map('site') %>% 
+  purrr::map_dfr(~c(.x[['lon']],.x[['lat']]) %>% as.numeric)%>% 
+  t %>%
+  `colnames<-`(c("lon","lat")) %>% data.frame
+del.ind <- c()
+for (i in 1:nrow(site.locs)) {
+  for (j in i:nrow(site.locs)) {
+    if (i == j) {
+      next
+    }
+    if (site.locs$lon[i] == site.locs$lon[j] &&
+        site.locs$lat[i] == site.locs$lat[j]) {
+      del.ind <- c(del.ind, j)
+    }
+  }
+}
+settings <- settings[-del.ind]
 
 #####
 unlink(paste0(settings$outdir,"/pecan.xml"))

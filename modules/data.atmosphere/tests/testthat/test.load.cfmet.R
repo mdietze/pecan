@@ -14,7 +14,6 @@ on.exit(ncdf4::nc_close(subdaily.nc), add = TRUE)
 
 test_that("data extracted from test pecan-cf met files is valid",{
   expect_is(daily.cf, "data.frame")
-  expect_is(daily.cf, "data.table")
 
   expect_is(daily.cf$date, "POSIXct")
   expect_is(daily.cf$date, "POSIXt")
@@ -50,7 +49,7 @@ test_that("load.cfmet throws error if start/end date out of range",{
                           start.date = "1950-12-31", end.date = "1951-12-31"),
                "run start date .* before met data starts")
   expect_error(load.cfmet(met.nc = daily.nc, lat = 39, lon = -88,
-                          start.date = "1951-01-02", end.date = "1952-01-01"),
+                          start.date = "1951-01-02", end.date = "1952-01-15"),
                "run end date .* after met data ends")
 })
 

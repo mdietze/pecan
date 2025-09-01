@@ -1,14 +1,8 @@
-#-------------------------------------------------------------------------------
-# Copyright (c) 2012 University of Illinois, NCSA.
-# All rights reserved. This program and the accompanying materials
-# are made available under the terms of the
-# University of Illinois/NCSA Open Source License
-# which accompanies this distribution, and is available at
-# http://opensource.ncsa.illinois.edu/license.html
-#-------------------------------------------------------------------------------
-
-##' @title write_restart.SIPNET
-##' @name  write_restart.SIPNET
+##' write_restart.SIPNET
+##'
+##' Write restart files for SIPNET.
+##' WARNING: Some variables produce illegal values < 0 and have been hardcoded to correct these values!!
+##'
 ##' @author Ann Raiho \email{araiho@@nd.edu}
 ##'
 ##' @param outdir output directory
@@ -20,14 +14,15 @@
 ##' @param RENAME flag to either rename output file or not
 ##' @param new.params list of parameters to convert between different states 
 ##' @param inputs list of model inputs to use in write.configs.SIPNET
-##'
-##' @description Write restart files for SIPNET. WARNING: Some variables produce illegal values < 0 and have been hardcoded to correct these values!!
+##' @param verbose decide if we want to print the outputs.
 ##' 
 ##' @return NONE
+##'
+##' @importFrom dplyr %>%
 ##' @export
 write_restart.SIPNET <- function(outdir, runid, start.time, stop.time, settings, new.state,
-                                 RENAME = TRUE, new.params = FALSE, inputs) {
-  
+                                 RENAME = TRUE, new.params = FALSE, inputs, verbose = FALSE) {
+
   rundir <- settings$host$rundir
   variables <- colnames(new.state)
   # values that will be used for updating other states deterministically depending on the SDA states
@@ -64,10 +59,10 @@ write_restart.SIPNET <- function(outdir, runid, start.time, stop.time, settings,
     names(analysis.save[[length(analysis.save)]]) <- c("NEE")
   }
   
- if ("AbvGrndWood" %in% variables) {
-     AbvGrndWood <- PEcAn.utils::ud_convert(new.state$AbvGrndWood,  "Mg/ha", "g/m^2")
-     analysis.save[[length(analysis.save) + 1]] <- AbvGrndWood 	  
-     names(analysis.save[[length(analysis.save)]]) <- c("AbvGrndWood")
+  if ("AbvGrndWood" %in% variables) {
+    AbvGrndWood <- PEcAn.utils::ud_convert(new.state$AbvGrndWood,  "Mg/ha", "g/m^2")
+    analysis.save[[length(analysis.save) + 1]] <- AbvGrndWood
+    names(analysis.save[[length(analysis.save)]]) <- c("AbvGrndWood")
   }
   
   if ("LeafC" %in% variables) {
@@ -92,6 +87,12 @@ write_restart.SIPNET <- function(outdir, runid, start.time, stop.time, settings,
     analysis.save[[length(analysis.save) + 1]] <- new.state$litter_mass_content_of_water  ## unitless
     if (new.state$litter_mass_content_of_water < 0 || new.state$litter_mass_content_of_water > 1) analysis.save[[length(analysis.save)]] <- 0.5
     names(analysis.save[[length(analysis.save)]]) <- c("litter_mass_content_of_water")
+  }
+  
+  if ("SoilMoist" %in% variables) {
+    analysis.save[[length(analysis.save) + 1]] <- new.state$SoilMoist
+    if (new.state$SoilMoist < 0) analysis.save[[length(analysis.save)]] <- 0
+    names(analysis.save[[length(analysis.save)]]) <- c("soilWater")
   }
   
   if ("SoilMoistFrac" %in% variables) {
@@ -120,8 +121,10 @@ write_restart.SIPNET <- function(outdir, runid, start.time, stop.time, settings,
     analysis.save.mat <- NULL
   }
 
-  print(runid %>% as.character())
-  print(analysis.save.mat)
+  if (verbose) {
+    print(runid %>% as.character())
+    print(analysis.save.mat)
+  }
   do.call(write.config.SIPNET, args = list(defaults = NULL,
                                            trait.values = new.params,
                                            settings = settings,

@@ -1,9 +1,7 @@
 Package: PEcAn.all
 Type: Package
-Title: PEcAn functions used for ecological forecasts and
-    reanalysis
-Version: 1.7.2.9000
-Date: 2021-10-04
+Title: PEcAn Functions Used for Ecological Forecasts and Reanalysis
+Version: 1.9.0
 Authors@R: c(person("Mike", "Dietze", role = c("aut"),
                      email = "dietze@bu.edu"),
              person("David", "LeBauer", role = c("aut", "cre"),
@@ -45,6 +43,8 @@ Description: The Predictive Ecosystem Carbon Analyzer
     PEcAn is to streamline the interaction between data and
     models, and to improve the efficacy of scientific
     investigation.
+URL: https://pecanproject.github.io
+BugReports: https://github.com/PecanProject/pecan/issues
 Depends:
     PEcAn.DB,
     PEcAn.settings,
@@ -64,6 +64,7 @@ Depends:
 Imports:
     utils
 Suggests:
+    mockery,
     PEcAn.ED2,
     PEcAn.SIPNET,
     PEcAn.BIOCRO,
@@ -71,10 +72,11 @@ Suggests:
     PEcAn.LINKAGES,
     PEcAn.allometry,
     PEcAn.photosynthesis,
+    sessioninfo,
     testthat
 License: BSD_3_clause + file LICENSE
 Copyright: Authors
 LazyData: true
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.2.3
+RoxygenNote: 7.3.2

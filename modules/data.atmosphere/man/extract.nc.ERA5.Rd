@@ -13,31 +13,42 @@ extract.nc.ERA5(
   outfolder,
   in.prefix,
   newsite,
+  ncores = 1,
   vars = NULL,
   overwrite = FALSE,
+  verbose = FALSE,
   ...
 )
 }
 \arguments{
-\item{slat}{latitude}
+\item{slat}{numeric: vector of latitudes.}
 
-\item{slon}{longitude}
+\item{slon}{numeric: vector of longitudes.}
 
-\item{in.path}{path to the directory containing the file to be inserted}
+\item{in.path}{character: path to the directory containing the file to be inserted}
 
-\item{start_date}{start date}
+\item{start_date}{character: start date (in YYYY-MM-DD format).}
 
-\item{end_date}{end date}
+\item{end_date}{character: end date (in YYYY-MM-DD format).}
 
-\item{outfolder}{Path to directory where nc files need to be saved.}
+\item{outfolder}{character: Path to directory where nc files need to be saved.}
 
-\item{in.prefix}{initial portion of the filename that does not vary by date. Does not include directory; specify that as part of in.path.}
+\item{in.prefix}{character: initial portion of the filename that does not vary by date.
+Does not include directory; specify that as part of in.path.}
 
-\item{newsite}{site name.}
+\item{newsite}{character: vector of site names. 
+The length should match with that of slat and slon.}
 
-\item{vars}{variables to be extarcted. If NULL all the variables will be returned.}
+\item{ncores}{numeric: the number of CPUs for the parallel compute. Default is 1.}
+
+\item{vars}{character: names of variables to be extracted. If NULL all the variables will be
+returned. Default is NULL.}
 
 \item{overwrite}{Logical if files needs to be overwritten.}
+
+\item{verbose}{Decide if we want to stop printing info.}
+
+\item{...}{other inputs.}
 }
 \value{
 a list of xts objects with all the variables for the requested years
@@ -46,13 +57,27 @@ a list of xts objects with all the variables for the requested years
 ERA5_extract
 }
 \details{
-For the list of variables check out the documentation at \link{https://confluence.ecmwf.int/display/CKB/ERA5+data+documentation#ERA5datadocumentation-Spatialgrid}
+For the list of variables check out the documentation at \url{
+ https://confluence.ecmwf.int/display/CKB/ERA5+data+documentation#ERA5datadocumentation-Spatialgrid}
 }
 \examples{
 \dontrun{
-point.data <- ERA5_extract(sslat=40, slon=-120, years=c(1990:1995), vars=NULL)
-
- purrr::map(~xts::apply.daily(.x, mean))
+point.data <- extract.nc.ERA5(
+  slat = 43.25,
+  slon = -83.25,
+  in.path = "path/to/era5/files",
+  start_date = "1990-01-01",
+  end_date = "1995-12-31",
+  outfolder = "path/to/output",
+  in.prefix = "ERA5_",
+  newsite = "my_site",
+  vars = NULL,
+  overwrite = FALSE,
+  verbose = TRUE
+)
 
 }
+}
+\author{
+Dongchen Zhang, Akash
 }

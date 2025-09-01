@@ -1,12 +1,3 @@
-#-------------------------------------------------------------------------------
-# Copyright (c) 2012 University of Illinois, NCSA.
-# All rights reserved. This program and the accompanying materials
-# are made available under the terms of the 
-# University of Illinois/NCSA Open Source License
-# which accompanies this distribution, and is available at
-# http://opensource.ncsa.illinois.edu/license.html
-#-------------------------------------------------------------------------------
-
 ## split clim file into smaller time units to use in KF
 ##' @title split_inputs.SIPNET
 ##' @name  split_inputs.SIPNET
@@ -21,6 +12,8 @@
 ##' @description Splits climate met for SIPNET
 ##' 
 ##' @return file split up climate file
+##' @importFrom rlang .data
+##' @importFrom dplyr %>%
 ##' @export
 split_inputs.SIPNET <- function(settings, start.time, stop.time, inputs, overwrite = FALSE, outpath = NULL) {
   #### Get met paths
@@ -37,10 +30,9 @@ split_inputs.SIPNET <- function(settings, start.time, stop.time, inputs, overwri
   names(file) <- paste(start.time, "-", stop.time)
   
   #Changing the name of the files, so it would contain the name of the hour as well.
-  file <- paste0(outpath, "/", prefix, ".",
-                 paste0(start.time%>% as.character() %>% gsub(' ',"_",.),
-                        "-",
-                        stop.time%>% as.character() %>% gsub(' ',"_",.)), ".clim")
+  formatted_start <- gsub(' ',"_", as.character(start.time))
+  formatted_stop <- gsub(' ',"_", as.character(stop.time))
+  file <- paste0(outpath, "/", prefix, ".", formatted_start, "-", formatted_stop, ".clim")
   
   if(file.exists(file) & !overwrite){
     return(file)
@@ -51,10 +43,10 @@ split_inputs.SIPNET <- function(settings, start.time, stop.time, inputs, overwri
 
   #@Hamze, I added the Date variable by using year, doy, and hour and filtered the clim based that and then removed it afterwards.
   dat<-input.dat %>% 
-    dplyr::mutate(Date = strptime(paste(V2, V3), format = "%Y %j",   tz = "UTC")%>% as.POSIXct()) %>%
-    dplyr::mutate(Date = as.POSIXct(paste0(Date,  ceiling(V4), ":00"), format = "%Y-%m-%d %H:%M", tz = "UTC")) %>% 
-    dplyr::filter(Date >= start.time, Date < stop.time) %>% 
-    dplyr::select(-Date)
+    dplyr::mutate(Date = strptime(paste(.data$V2, .data$V3), format = "%Y %j",   tz = "UTC")%>% as.POSIXct()) %>%
+    dplyr::mutate(Date = as.POSIXct(paste0(.data$Date,  ceiling(.data$V4), ":00"), format = "%Y-%m-%d %H:%M", tz = "UTC")) %>% 
+    dplyr::filter(.data$Date >= start.time, .data$Date < stop.time) %>% 
+    dplyr::select(-.data$Date)
   
   
   ###### Write Met to file

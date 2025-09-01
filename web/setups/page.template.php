@@ -42,7 +42,6 @@
       <p>This is the Admin Pages.
         <h1>List of available configurations</h1>
         <a href="edit.php?key=database" >Database</a> <br>
-        <a href="edit.php?key=browndog" >Browndog</a> <br>
         <a href="edit.php?key=fiadb" >FIA Database</a> <br>
         <a href="chpasswd.php" >Change Password</a> <br>
       </p>
@@ -51,11 +50,11 @@
         </div>
       <p></p>
       <p>
-        <a href="https://pecan.gitbooks.io/pecan-documentation/content/" target="_blank">Documentation</a>
+        <a href="https://pecanproject.github.io/documentation/master/" target="_blank">Documentation</a>
       <br>
-        <a href="https://join.slack.com/t/pecanproject/shared_invite/enQtMzkyODUyMjQyNTgzLWEzOTM1ZjhmYWUxNzYwYzkxMWVlODAyZWQwYjliYzA0MDA0MjE4YmMyOTFhMjYyMjYzN2FjODE4N2Y4YWFhZmQ" target="_blank">Chat Room</a>
+        <a href="https://join.slack.com/t/pecanproject/shared_invite/enQtMzkyODUyMjQyNTgzLWEzOTM1ZjhmYWUxNzYwYzkxMWVlODAyZWQwYjliYzA0MDA0MjE4YmMyOTFhMjYyMjYzN2FjODE4N2Y4YWFhZmQ" target="_blank">Slack Channel</a>
       <br>
-        <a href="http://pecanproject.github.io/Report_an_issue.html" target="_blank">Bug Report</a>
+        <a href="https://github.com/PecanProject/pecan/issues/new/choose" target="_blank">Bug Report</a>
       </p>
     </div>
     <div id="output">

@@ -7,9 +7,12 @@
 #' @param lon.in Site longitude coordinate
 #' @param overwrite Overwrite existing files?  Default=FALSE
 #' @param verbose Turn on verbose output? Default=FALSE
+#' @param progress Whether or not to show a progress bar.
+#' Requires the `progress` package to be installed.
 #' @param parallel Download in parallel? Default = TRUE
 #' @param ncores Number of cores for parallel download. Default is
 #' `parallel::detectCores()`
+#' @param ... further arguments, currently ignored
 #'
 #' @examples
 #'
@@ -233,7 +236,7 @@ get_NARR_thredds <- function(start_date, end_date, lat.in, lon.in,
     get_dfs$data <- foreach::`%dopar%`(
       foreach::foreach(
         url = get_dfs$url, flx = get_dfs$flx,
-        .packages = c("PEcAn.data.atmosphere", "magrittr"),
+        .packages = c("PEcAn.data.atmosphere", "dplyr"),
         .export = c("get_narr_url", "robustly")
       ),
         PEcAn.utils::robustly(get_narr_url)(url, xy = xy, flx = flx)
@@ -345,7 +348,7 @@ generate_narr_url <- function(dates, flx) {
     dplyr::select("startdate", "url")
 }
 
-#' Assign daygroup tag for a given date
+# Assign daygroup tag for a given date
 daygroup <- function(date, flx) {
   mday <- lubridate::mday(date)
   mmax <- lubridate::days_in_month(date)
@@ -465,9 +468,9 @@ latlon2narr <- function(nc, lat.in, lon.in) {
 #' @inheritParams get_NARR_thredds
 #' @return `sp::SpatialPoints` object containing transformed x and y
 #' coordinates, in km, which should match NARR coordinates
-#' @importFrom rgdal checkCRSArgs
+#' @importFrom sf st_crs
   # ^not used directly here, but needed by sp::CRS.
-  # sp lists rgdal in Suggests rather than Imports,
+  # sp lists sf in Suggests rather than Imports,
   # so importing it here to ensure it's available at run time
 #' @author Alexey Shiklomanov
 #' @export

@@ -1,38 +1,56 @@
-
-#-------------------------------------------------------------------------------
-# Copyright (c) 2012 University of Illinois, NCSA.
-# All rights reserved. This program and the accompanying materials
-# are made available under the terms of the
-# University of Illinois/NCSA Open Source License
-# which accompanies this distribution, and is available at
-# http://opensource.ncsa.illinois.edu/license.html
-#-------------------------------------------------------------------------------
-
-# R Code to convert NetCDF CF met files into SIPNET met files
-
-## If files already exist in 'Outfolder', the default function is NOT to overwrite them and only
-## gives user the notice that file already exists. If user wants to overwrite the existing files,
-## just change overwrite statement below to TRUE.
-
-##' met2model wrapper for SIPNET
-##'
-##' @title met2model.SIPNET
-##' @export
-##' @param in.path location on disk where inputs are stored
-##' @param in.prefix prefix of input and output files OR the full file name if year.fragment = TRUE
-##' @param outfolder location on disk where outputs will be stored
-##' @param start_date the start date of the data to be downloaded (will only use the year part of the date)
-##' @param end_date the end date of the data to be downloaded (will only use the year part of the date)
-##' @param overwrite should existing files be overwritten
-##' @param verbose should the function be very verbose
-##' @param year.fragment the function should ignore whether or not the data is stored as a set of complete years (such as for forecasts).
-##' @author Luke Dramko, Michael Dietze, Alexey Shiklomanov, Rob Kooper
-met2model.SIPNET <- function(in.path, in.prefix, outfolder, start_date, end_date,
+#' met2model wrapper for SIPNET
+#'
+#' Reads weather data from CF-formatted NetCDFs and writes it in the `.clim`
+#' format expected by SIPNET: a 14-column tab-separated table with no headers.
+#'
+#' The columns of the output file are:
+#'    * Grid index. Always 0 from this function; PEcAn configures SIPNET not to
+#'      use this.
+#'    * 4-digit year
+#'    * Day of year
+#'    * Hour of day
+#'    * Timestep size (days)
+#'    * Air temperature (degrees C)
+#'    * Soil temperature (degrees C)
+#'    * PAR (mol/m2/hr)
+#'    * Precip (mm)
+#'    * VPD (Pa)
+#'    * VPD of soil (Pa)
+#'    * Canopy vapor pressure (Pa)
+#'    * Wind speed (m/s)
+#'    * Soil moisture (fraction of saturation).
+#'      Always  0.6 from this function; PEcAn configures SIPNET to calculate it
+#'      internally.
+#'
+#' SIPNET does not allow missing values in its inputs. If the result contains
+#' NAs after conversion, no file is written and the process returns an error.
+#' To fix this, consider using a formal gap-filling method such as
+#' `PEcAn.data.atmosphere::metgapfill()` before calling met2model.
+#'
+#' @md
+#' @return a dataframe containing information about the files created
+#' @export
+#' @param in.path location on disk where inputs are stored
+#' @param in.prefix prefix of input and output files,
+#   OR the full file name if year.fragment = TRUE
+#' @param outfolder location on disk where outputs will be stored
+#' @param start_date the start date of the data to be downloaded
+#'  (will only use the year part of the date)
+#' @param end_date the end date of the data to be downloaded
+#'  (will only use the year part of the date)
+#' @param var.names character: list of variable names to be extracted. Default is NULL.
+#' @param overwrite should existing files be overwritten
+#' @param verbose should the function be very verbose
+#' @param year.fragment the function should ignore whether or not the data is
+#'  stored as a set of complete years (such as for forecasts).
+#' @param ... Additional arguments, currently ignored
+#' @author Luke Dramko, Michael Dietze, Alexey Shiklomanov, Rob Kooper
+met2model.SIPNET <- function(in.path, in.prefix, outfolder, start_date, end_date, var.names = NULL,
                              overwrite = FALSE, verbose = FALSE, year.fragment = FALSE, ...) {
  
-  
-
-  PEcAn.logger::logger.info("START met2model.SIPNET")
+  if (verbose) {
+    PEcAn.logger::logger.info("START met2model.SIPNET")
+  }
   start_date <- as.POSIXlt(start_date, tz = "UTC")
   end_date <- as.POSIXlt(end_date, tz = "UTC")
   if (year.fragment) { # in.prefix is not guaranteed to contain the file extension.
@@ -42,7 +60,7 @@ met2model.SIPNET <- function(in.path, in.prefix, outfolder, start_date, end_date
       PEcAn.logger::logger.severe(paste0("No files found matching ", in.prefix, "; cannot process data."))
     }
     
-    # This function is supposed to process netcdf files, so we'll search for files the the extension .nc and use those first.
+    # This function is supposed to process netcdf files, so we'll search for files with the extension .nc and use those first.
     nc_file = grep("\\.nc$", matching_files)
     if (length(nc_file) > 0) {
       if (grepl("\\.nc$", in.prefix)) {
@@ -54,7 +72,7 @@ met2model.SIPNET <- function(in.path, in.prefix, outfolder, start_date, end_date
     } else { # no .nc files found... it could be that the extension was left off, or some other problem
       PEcAn.logger::logger.warn("No files found with extension '.nc'.  Using the first file in the list below:")
       PEcAn.logger::logger.warn(matching_files)
-      in.prefix <- matching_files[i]
+      in.prefix <- matching_files[1]
     }
   } else { # Default behavior
     out.file <- paste(in.prefix, strptime(start_date, "%Y-%m-%d"),
@@ -73,11 +91,15 @@ met2model.SIPNET <- function(in.path, in.prefix, outfolder, start_date, end_date
                         enddate = end_date,
                         dbfile.name = out.file,
                         stringsAsFactors = FALSE)
-  PEcAn.logger::logger.info("internal results")
-  PEcAn.logger::logger.info(results)
+  if (verbose) {
+    PEcAn.logger::logger.info("internal results")
+    PEcAn.logger::logger.info(results)
+  }
   
   if (file.exists(out.file.full) && !overwrite) {
-    PEcAn.logger::logger.debug("File '", out.file.full, "' already exists, skipping to next file.")
+    if (verbose) {
+      PEcAn.logger::logger.debug("File '", out.file.full, "' already exists, skipping to next file.")
+    }
     return(invisible(results))
   }
   
@@ -102,7 +124,9 @@ met2model.SIPNET <- function(in.path, in.prefix, outfolder, start_date, end_date
   for (year in start_year:end_year) {
     
     skip <- FALSE
-    PEcAn.logger::logger.info(year)
+    if (verbose) {
+      PEcAn.logger::logger.info(year)
+    }
     
     diy <- PEcAn.utils::days_in_year(year)
     
@@ -114,8 +138,12 @@ met2model.SIPNET <- function(in.path, in.prefix, outfolder, start_date, end_date
     
     if (file.exists(old.file)) {
       ## open netcdf
-      nc <- ncdf4::nc_open(old.file)  
-      
+      nc <- ncdf4::nc_open(old.file)
+      if (!is.null(var.names)) {
+        nc.var.names <- var.names
+      } else {
+        nc.var.names <- names(nc$var)
+      }
       ## convert time to seconds
       sec <- nc$dim$time$vals
       sec <- PEcAn.utils::ud_convert(sec, unlist(strsplit(nc$dim$time$units, " "))[1], "seconds")
@@ -138,12 +166,17 @@ met2model.SIPNET <- function(in.path, in.prefix, outfolder, start_date, end_date
       Tair <-ncdf4::ncvar_get(nc, "air_temperature")  ## in Kelvin
       Tair_C <- PEcAn.utils::ud_convert(Tair, "K", "degC")
       Qair <-ncdf4::ncvar_get(nc, "specific_humidity")  #humidity (kg/kg)
-      ws <- try(ncdf4::ncvar_get(nc, "wind_speed"))
-      if (!is.numeric(ws)) {
+      
+      # if we have wind speed.
+      if ("wind_speed" %in% nc.var.names) {
+        ws <- ncdf4::ncvar_get(nc, "wind_speed")
+      } else {
         U <- ncdf4::ncvar_get(nc, "eastward_wind")
         V <- ncdf4::ncvar_get(nc, "northward_wind")
         ws <- sqrt(U ^ 2 + V ^ 2)
-        PEcAn.logger::logger.info("wind_speed absent; calculated from eastward_wind and northward_wind")
+        if (verbose) {
+          PEcAn.logger::logger.info("wind_speed absent; calculated from eastward_wind and northward_wind")
+        }
       }
       
       Rain <- ncdf4::ncvar_get(nc, "precipitation_flux")
@@ -152,32 +185,42 @@ met2model.SIPNET <- function(in.path, in.prefix, outfolder, start_date, end_date
 
       SW <- ncdf4::ncvar_get(nc, "surface_downwelling_shortwave_flux_in_air")  ## in W/m2
       
-      PAR <- try(ncdf4::ncvar_get(nc, "surface_downwelling_photosynthetic_photon_flux_in_air"))  ## in umol/m2/s
-      if (!is.numeric(PAR)) {
+      # if we have PAR.
+      if ("surface_downwelling_photosynthetic_photon_flux_in_air" %in% nc.var.names) {
+        PAR <- ncdf4::ncvar_get(nc, "surface_downwelling_photosynthetic_photon_flux_in_air")
+      } else {
         PAR <- PEcAn.utils::ud_convert(PEcAn.data.atmosphere::sw2ppfd(SW), "umol ", "mol")
-        PEcAn.logger::logger.info("surface_downwelling_photosynthetic_photon_flux_in_air absent; PAR set to SW * 0.45")
+        if (verbose) {
+          PEcAn.logger::logger.info("surface_downwelling_photosynthetic_photon_flux_in_air absent; PAR set to SW * 0.45")
+        }
       }
       
-      soilT <- try(ncdf4::ncvar_get(nc, "soil_temperature"))
-      if (!is.numeric(soilT)) {
+      # if we have soil temperature.
+      if ("soil_temperature" %in% nc.var.names) {
+        soilT <- ncdf4::ncvar_get(nc, "soil_temperature")
+        soilT <- PEcAn.utils::ud_convert(soilT, "K", "degC")
+      } else {
         # approximation borrowed from SIPNET CRUNCEP preprocessing's tsoil.py
         tau <- 15 * tstep
         filt <- exp(-(1:length(Tair)) / tau)
         filt <- (filt / sum(filt))
-        soilT <- convolve(Tair, filt)
+        soilT <- stats::convolve(Tair, filt)
         soilT <- PEcAn.utils::ud_convert(soilT, "K", "degC")
-        PEcAn.logger::logger.info("soil_temperature absent; soilT approximated from Tair")
-      } else {
-        soilT <- PEcAn.utils::ud_convert(soilT, "K", "degC")
+        if (verbose) {
+          PEcAn.logger::logger.info("soil_temperature absent; soilT approximated from Tair")
+        }
       }
       
       SVP <- PEcAn.utils::ud_convert(PEcAn.data.atmosphere::get.es(Tair_C), "millibar", "Pa")  ## Saturation vapor pressure
-      VPD <- try(ncdf4::ncvar_get(nc, "water_vapor_saturation_deficit"))  ## in Pa
-      if (!is.numeric(VPD)) {
-
+      
+      # if we have VPD.
+      if ("water_vapor_saturation_deficit" %in% nc.var.names) {
+        VPD <- ncdf4::ncvar_get(nc, "water_vapor_saturation_deficit")
+      } else {
         VPD <- SVP * (1 - PEcAn.data.atmosphere::qair2rh(Qair, Tair_C, press = press/100))
-
-        PEcAn.logger::logger.info("water_vapor_saturation_deficit absent; VPD calculated from Qair, Tair, and SVP (saturation vapor pressure) ")
+        if (verbose) {
+          PEcAn.logger::logger.info("water_vapor_saturation_deficit absent; VPD calculated from Qair, Tair, and SVP (saturation vapor pressure) ")
+        }
       }
       e_a <- SVP - VPD
       VPDsoil <- PEcAn.utils::ud_convert(PEcAn.data.atmosphere::get.es(soilT), "millibar", "Pa") *
@@ -185,7 +228,9 @@ met2model.SIPNET <- function(in.path, in.prefix, outfolder, start_date, end_date
       
       ncdf4::nc_close(nc)
     } else {
-      PEcAn.logger::logger.info("Skipping to next year")
+      if (verbose) {
+        PEcAn.logger::logger.info("Skipping to next year")
+      }
       next
     }
     
@@ -306,19 +351,36 @@ met2model.SIPNET <- function(in.path, in.prefix, outfolder, start_date, end_date
     }
   }
 
-    
-    if (is.null(out)) {
-      out <- tmp
-    } else {
-      out <- rbind(out, tmp)
-    }
-    
+
+    out <- rbind(out, tmp)
+
   }  ## end loop over years
-  
+
   if (!is.null(out)) {
-    
+
+    # Sipnet does not know how to handle missing values in clim files.
+    # -- No, say it louder: Missing values send Sipnet into _infinite loops_.
+    # Let's not do that, hmm?
+    if (anyNA(out)) {
+      n_bad <- nrow(out) - nrow(stats::na.omit(out))
+      PEcAn.logger::logger.error(
+        "Result contains", n_bad, "(of", nrow(out), "total)",
+        "rows with missing values, which are not allowed in SIPNET inputs.",
+        "No output written."
+      )
+      return(invisible(NULL))
+    }
+
     ## write output
-    utils::write.table(out, out.file.full, quote = FALSE, sep = "\t", row.names = FALSE, col.names = FALSE)
+    utils::write.table(
+      # as.data.frame to avoid writing integers as floats
+      x = format(as.data.frame(out), digits = 4),
+      file = out.file.full,
+      quote = FALSE,
+      sep = "\t",
+      row.names = FALSE,
+      col.names = FALSE
+    )
     return(invisible(results))
   } else {
     PEcAn.logger::logger.info("NO MET TO OUTPUT")

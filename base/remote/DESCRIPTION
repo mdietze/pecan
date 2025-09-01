@@ -1,8 +1,7 @@
 Package: PEcAn.remote
 Type: Package
 Title: PEcAn Model Execution Utilities
-Version: 1.7.2
-Date: 2021-10-04
+Version: 1.9.0
 Authors@R: c(person("David", "LeBauer", role = c("aut"),
                      email = "dlebauer@email.arizona.edu"),
              person("Rob", "Kooper", role = c("aut", "cre"),
@@ -16,8 +15,12 @@ Authors@R: c(person("David", "LeBauer", role = c("aut"),
              person("University of Illinois, NCSA", role = c("cph")))
 Description: This package contains utilities for communicating with and executing code on local and remote hosts.
     In particular, it has PEcAn-specific utilities for starting ecosystem model runs.
+URL: https://pecanproject.github.io
+BugReports: https://github.com/PecanProject/pecan/issues
 Imports:
+    dplyr,
     foreach,
+    furrr,
     PEcAn.logger,
     httr,
     jsonlite,
@@ -33,4 +36,4 @@ License: BSD_3_clause + file LICENSE
 Encoding: UTF-8
 LazyData: true
 Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.2.3
+RoxygenNote: 7.3.2

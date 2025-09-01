@@ -1,11 +1,3 @@
-## -------------------------------------------------------------------------------
-##  Copyright (c) 2012 University of Illinois, NCSA.
-##  All rights reserved. This program and the accompanying materials
-##  are made available under the terms of the 
-##  University of Illinois/NCSA Open Source License
-##  which accompanies this distribution, and is available at
-##  http://opensource.ncsa.illinois.edu/license.html
-##-------------------------------------------------------------------------------
 
 context("Testing Logger Settings")
 
@@ -15,7 +7,7 @@ test_that("`logger.getLevelNumber` returns correct level number",{
   expect_equal(logger.getLevelNumber("info"), 20)
   expect_equal(logger.getLevelNumber("warn"), 30)
   expect_equal(logger.getLevelNumber("error"), 40)
-  expect_equal(logger.getLevelNumber("severe"), 40)
+  expect_equal(logger.getLevelNumber("severe"), 50)
   expect_equal(logger.getLevelNumber("off"), 60)
   
   old_settings <- logger.setLevel("ERROR")

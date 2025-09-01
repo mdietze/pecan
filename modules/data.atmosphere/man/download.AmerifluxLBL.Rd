@@ -20,7 +20,7 @@ download.AmerifluxLBL(
 )
 }
 \arguments{
-\item{sitename}{the Ameriflux ID of the site to be downloaded, used as file name prefix. 
+\item{sitename}{the Ameriflux ID of the site to be downloaded, used as file name prefix.
 The 'SITE_ID' field in \href{http://ameriflux.lbl.gov/sites/site-list-and-pages/}{list of Ameriflux sites}}
 
 \item{outfolder}{location on disk where outputs will be stored}
@@ -42,6 +42,8 @@ The 'SITE_ID' field in \href{http://ameriflux.lbl.gov/sites/site-list-and-pages/
 \item{data_product}{AmeriFlux data product}
 
 \item{data_policy}{Two possible licenses (based on the site): 'CCBY4.0' or 'LEGACY'}
+
+\item{...}{further arguments, currently ignored}
 }
 \description{
 download.AmerifluxLBL. Function uses amf_download_base function from amerifluxr package
@@ -50,7 +52,7 @@ to the given outfolder. Details about amf_download_base function can be found he
 https://github.com/chuhousen/amerifluxr/blob/master/R/amf_download_base.R
 }
 \details{
-Uses Ameirflux LBL JSON API to download met data from Ameriflux towers in CSV format
+Uses Ameriflux LBL JSON API to download met data from Ameriflux towers in CSV format
 }
 \examples{
 \dontrun{

@@ -2,8 +2,7 @@ Package: PEcAn.utils
 Type: Package
 Title: PEcAn Functions Used for Ecological Forecasts and
     Reanalysis
-Version: 1.7.2
-Date: 2021-10-04
+Version: 1.8.1
 Authors@R: c(person("Mike", "Dietze", role = c("aut"),
                      email = "dietze@bu.edu"),
              person("Rob", "Kooper", role = c("aut", "cre"),
@@ -31,6 +30,8 @@ Description: The Predictive Ecosystem Carbon Analyzer
     PEcAn is to streamline the interaction between data and
     models, and to improve the efficacy of scientific
     investigation.
+URL: https://pecanproject.github.io
+BugReports: https://github.com/PecanProject/pecan/issues
 Imports:
     abind (>= 1.4.5),
     curl,
@@ -48,13 +49,15 @@ Suggests:
     data.table,
     ggplot2,
     MASS,
+    mockery,
     randtoolbox,
     rjags,
     testthat (>= 2.0.0),
+    withr,
     xtable
 License: BSD_3_clause + file LICENSE
 Copyright: Authors
 LazyData: true
 Encoding: UTF-8
-RoxygenNote: 7.2.3
+RoxygenNote: 7.3.2
 Roxygen: list(markdown = TRUE)

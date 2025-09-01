@@ -1,12 +1,3 @@
-#-------------------------------------------------------------------------------
-# Copyright (c) 2015 Boston University, NCSA.
-# All rights reserved. This program and the accompanying materials
-# are made available under the terms of the
-# NCSA Open Source License
-# which accompanies this distribution, and is available at
-# http://opensource.ncsa.illinois.edu/license.html
-#-------------------------------------------------------------------------------
-
 # R Code to convert NetCDF CF met files into GDAY met files
 
 ## If files already exist in 'Outfolder', the default function is NOT to overwrite them and only
@@ -32,6 +23,7 @@
 ##'        the year part of the date)
 ##' @param overwrite should existing files be overwritten
 ##' @param verbose should the function be very verbose
+##' @param ... additional arguments, currently ignored
 ##' @return generates GDAY formatted met file as a side affect, returns file metadata
 ##' that will be inserted into database
 ##' @author Martin De Kauwe, Tony Gardella

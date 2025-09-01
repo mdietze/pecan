@@ -1,25 +1,37 @@
-#' @title sda.enkf
-#' @name  sda.enkf
+#' State Variable Data Assimilation: Ensemble Kalman Filter and Generalized ensemble filter
+#'
+#' Restart mode:  Basic idea is that during a restart (primary case
+#'  envisioned as an iterative forecast), a new workflow folder is created and
+#'  the previous forecast for the start_time is copied over. During restart the
+#'  initial run before the loop is skipped, with the info being populated from
+#'  the previous run. The function then dives right into the first Analysis,
+#'  then continues on like normal.
+#'
 #' @author Michael Dietze and Ann Raiho \email{dietze@@bu.edu}
 #' 
 #' @param settings  PEcAn settings object
-#' @param obs.mean  List of dataframe of observation means, named with observation datetime.
-#' @param obs.cov   List of covariance matrices of state variables , named with observation datetime.
-#' @param Q         Process covariance matrix given if there is no data to estimate it.
-#' @param restart   Used for iterative updating previous forecasts. When the restart is TRUE it read the object in SDA folder written from previous SDA.
-#' @param control   List of flags controlling the behaviour of the SDA. trace for reporting back the SDA outcomes, interactivePlot for plotting the outcomes after each step, 
-#' TimeseriesPlot for post analysis examination, BiasPlot for plotting the correlation between state variables, plot.title is the title of post analysis plots and debug mode allows for pausing the code and examining the variables inside the function.
+#' @param obs.mean  List of dataframe of observation means, named with
+#'  observation datetime.
+#' @param obs.cov   List of covariance matrices of state variables , named with
+#'  observation datetime.
+#' @param Q         Process covariance matrix given if there is no data to
+#'  estimate it.
+#' @param restart   Used for iterative updating previous forecasts. When the
+#'  restart is TRUE it read the object in SDA folder written from previous
+#'  SDA.
+#' @param control   List of flags controlling the behaviour of the SDA. trace
+#'  for reporting back the SDA outcomes, interactivePlot for plotting the
+#'  outcomes after each step, TimeseriesPlot for post analysis examination,
+#'  BiasPlot for plotting the correlation between state variables, plot.title
+#'  is the title of post analysis plots and debug mode allows for pausing the
+#'  code and examining the variables inside the function.
+#' @param ...       Additional arguments, currently ignored
 #'
-#’ @details
-#’ Restart mode:  Basic idea is that during a restart (primary case envisioned as an iterative forecast), a new workflow folder is created and the previous forecast for the start_time is copied over. During restart the initial run before the loop is skipped, with the info being populated from the previous run. The function then dives right into the first Analysis, then continues on like normal.
-#' 
-#' @description State Variable Data Assimilation: Ensemble Kalman Filter and Generalized ensemble filter
 #' 
 #' @return NONE
 #' @import nimble
 #' @export
 #' 
-
 sda.enkf <- function(settings,
                      obs.mean,
                      obs.cov,
@@ -321,7 +333,7 @@ sda.enkf <- function(settings,
       
       
       #-------------------------- Writing the config/Running the model and reading the outputs for each ensemble
-      outconfig <- write.ensemble.configs(defaults = config.settings$pfts, 
+      outconfig <- PEcAn.uncertainty::write.ensemble.configs(defaults = config.settings$pfts, 
                                           ensemble.samples = ensemble.samples, 
                                           settings = config.settings,
                                           model = config.settings$model$type, 
@@ -388,7 +400,7 @@ sda.enkf <- function(settings,
     
     
     if(sum(X,na.rm=T) == 0){
-      logger.severe(paste('NO FORECAST for',obs.times[t],'Check outdir logfiles or read restart. Do you have the right variable names?'))
+      PEcAn.logger::logger.severe(paste('NO FORECAST for',obs.times[t],'Check outdir logfiles or read restart. Do you have the right variable names?'))
     }
     
     ###-------------------------------------------------------------------###
@@ -519,7 +531,7 @@ sda.enkf <- function(settings,
       
     } else {
       mu.f <- as.numeric(apply(X, 2, mean, na.rm = TRUE))
-      Pf <- cov(X)
+      Pf <- stats::cov(X)
       ###-------------------------------------------------------------------###
       ### No Observations --                                                ###----
       ###-----------------------------------------------------------------### 
@@ -547,7 +559,7 @@ sda.enkf <- function(settings,
       if (processvar & exists('X.new')) {X.adj.arg <- X.new }else{ X.adj.arg <- X ; print('using X not X.new. Assuming GEF was skipped this iteration?')}
       analysis <-adj.ens(Pf, X.adj.arg, mu.f, mu.a, Pa)
     }else{
-      analysis <- as.data.frame(rmvnorm(as.numeric(nrow(X)), mu.a, Pa, method = "svd"))
+      analysis <- as.data.frame(mvtnorm::rmvnorm(as.numeric(nrow(X)), mu.a, Pa, method = "svd"))
     }
     
     colnames(analysis) <- colnames(X)

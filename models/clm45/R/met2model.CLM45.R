@@ -1,12 +1,3 @@
-#-------------------------------------------------------------------------------
-# Copyright (c) 2015 NCSA.
-# All rights reserved. This program and the accompanying materials
-# are made available under the terms of the
-# University of Illinois/NCSA Open Source License
-# which accompanies this distribution, and is available at
-# http://opensource.ncsa.illinois.edu/license.html
-#-------------------------------------------------------------------------------
-#
 ## R Code to convert NetCDF CF met files into NetCDF CLM met files.
 
 ##' met2model wrapper for CLM45
@@ -19,6 +10,8 @@
 ##' @param start_date the start date of the data to be downloaded (will only use the year part of the date)
 ##' @param end_date the end date of the data to be downloaded (will only use the year part of the date)
 ##' @param lst timezone offset to GMT in hours
+##' @param lat,lon site coordinates
+##' @param ... other arguments, currently ignored
 ##' @param overwrite should existing files be overwritten
 ##' @param verbose should the function be very verbosefor(year in start_year:end_year)
 met2model.CLM45 <- function(in.path,in.prefix,outfolder,start_date, end_date, lst=0,lat,lon,..., overwrite=FALSE,verbose=FALSE){

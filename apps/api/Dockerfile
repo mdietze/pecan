@@ -1,12 +1,11 @@
 # this needs to be at the top, what version are we building
 ARG IMAGE_VERSION="latest"
-
+ARG PARENT_IMAGE="pecan/base"
 
 # --------------------------------------------------------------------------
 # PECAN FOR MODEL BASE IMAGE
 # --------------------------------------------------------------------------
-FROM pecan/base:${IMAGE_VERSION} 
-LABEL maintainer="Tezan Sahu <tezansahu@gmail.com>"
+FROM ${PARENT_IMAGE}:${IMAGE_VERSION} 
 
 EXPOSE 8000
 
@@ -15,12 +14,10 @@ EXPOSE 8000
 # --------------------------------------------------------------------------
 
 # COMMAND TO RUN
-RUN  --mount=type=secret,id=github_token \
-  export GITHUB_PAT=`cat /run/secrets/github_token` \
-  &&  apt-get update \
+RUN apt-get update \
   &&  apt-get install libsodium-dev -y \
   &&  rm -rf /var/lib/apt/lists/* \
-  &&  Rscript -e "devtools::install_version('promises', '1.1.0')" \
+  &&  Rscript -e "devtools::install_version('promises')" \
   &&  Rscript -e "devtools::install_version('webutils', '1.1')" \
   &&  Rscript -e "install.packages('pool')" \
   &&  Rscript -e "devtools::install_github('rstudio/swagger')" \
@@ -35,7 +32,6 @@ ENV AUTH_REQ="TRUE" \
     SECRET_KEY_BASE="thisisnotasecret"
 
 WORKDIR /api/R
-
-CMD Rscript entrypoint.R
-
 COPY ./ /api
+
+CMD ["Rscript", "entrypoint.R"]

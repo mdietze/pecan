@@ -14,6 +14,7 @@
 #' @param format_name Species code format name (see details)
 #' @param bety BETY connection object
 #' @param translation_table Data frame with custom translation table (see details).
+#' @param ... additional arguments, currently ignored
 #' @return \code{data.frame} containing the following columns:
 #' \describe{
 #'  \item{\code{input_code}}{Character provided as input}
@@ -67,7 +68,7 @@ match_species_id <- function(input_codes, format_name = 'custom', bety = NULL, t
                                   'be appended with ".translation_table" for disambiguation')
       }
       bety_species <- dplyr::tbl(bety, 'species') %>%
-        dplyr::filter(id %in% !!translation_table[['bety_species_id']]) %>%
+        dplyr::filter(.data$id %in% !!translation_table[['bety_species_id']]) %>%
         dplyr::select(bety_species_id = "id", "genus", "species") %>%
         dplyr::collect()
       translation <- dplyr::left_join(translation_table, bety_species,

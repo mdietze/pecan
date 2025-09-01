@@ -1,12 +1,3 @@
-##-----------------------------------------------------------------------------
-## Copyright (c) 2012 University of Illinois, NCSA.
-## All rights reserved. This program and the accompanying materials
-## are made available under the terms of the
-## University of Illinois/NCSA Open Source License
-## which accompanies this distribution, and is available at
-## http://opensource.ncsa.illinois.edu/license.html
-##-----------------------------------------------------------------------------
-
 #' Loads PEcAn settings file
 #'
 #' This will try and find the PEcAn settings file in the following order:
@@ -42,7 +33,7 @@
 #'
 #' settings <- read.settings()
 #' settings <- read.settings(file="willowcreek.xml")
-#' test.settings.file <- system.file("tests/test.xml", package = "PEcAn.all")
+#' test.settings.file <- system.file("tests/test.xml", package = "PEcAn.settings")
 #' settings <- read.settings(test.settings.file)
 #' }
 read.settings <- function(inputfile = "pecan.xml") {

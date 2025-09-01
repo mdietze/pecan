@@ -7,14 +7,18 @@
 # http://opensource.ncsa.illinois.edu/license.html
 #-------------------------------------------------------------------------------
 
-##' run ensemble.analysis
-##' 
-##' @name run.ensemble.analysis
-##' @title run ensemble.analysis
-##' @return nothing, creates ensemble plots as ensemble.analysis.pdf
-##' @param plot.timeseries if TRUE plots a modeled timeseries of target variable(s) with CIs
-##' @export
-##' @author David LeBauer, Shawn Serbin, Ryan Kelly
+#' run ensemble.analysis
+#' 
+#' @param settings PEcAn settings object
+#' @param plot.timeseries if TRUE plots a modeled timeseries of target variable(s) with CIs
+#' @param ensemble.id database ID, taken from settings if not specified
+#' @param variable variable name to process, taken from settings if not specified
+#' @param start.year,end.year taken from settings if not specified
+#' @param ... additional arguments passed to [ensemble.ts()]
+#'
+#' @return nothing, creates ensemble plots as ensemble.analysis.pdf
+#' @export
+#' @author David LeBauer, Shawn Serbin, Ryan Kelly
 run.ensemble.analysis <- function(settings, plot.timeseries = NA, ensemble.id = NULL, 
                                   variable = NULL, start.year = NULL, end.year = NULL, ...) {
   
@@ -73,15 +77,15 @@ run.ensemble.analysis <- function(settings, plot.timeseries = NA, ensemble.id = 
       print(paste("----- Variable: ", variable.fn, sep = ""))
       
       #units <- lapply(variable, function(x) { paste0(x, " (", mstmipvar(x, silent=TRUE)$units, ")") })
-      units <- paste0(variable.fn, " (", mstmipvar(variable.fn, silent=TRUE)$units, ")")
+      units <- paste0(variable.fn, " (", PEcAn.utils::mstmipvar(variable.fn, silent=TRUE)$units, ")")
       
       ### Load parsed model results
       fname <- ensemble.filename(settings, "ensemble.output", "Rdata", all.var.yr = FALSE,
                                  ensemble.id = ensemble.id, variable = variable.fn, start.year = start.year, end.year = end.year)
+      samples <- new.env()
+      load(fname, envir = samples)
       
-      load(fname)
-      
-      my.dat = unlist(ensemble.output)
+      my.dat = unlist(samples$ensemble.output)
       if(is.null(my.dat) | all(is.na(my.dat))){
         PEcAn.logger::logger.warn("no data in ensemble.output")
         return()
@@ -103,19 +107,19 @@ run.ensemble.analysis <- function(settings, plot.timeseries = NA, ensemble.id = 
                                  start.year = start.year, 
                                  end.year = end.year)
       
-      pdf(file = fname, width = 13, height = 6)
-      par(mfrow = c(1, 2), mar = c(4, 4.8, 1, 2))  # B, L, T, R
+      grDevices::pdf(file = fname, width = 13, height = 6)
+      graphics::par(mfrow = c(1, 2), mar = c(4, 4.8, 1, 2))  # B, L, T, R
       
-      hist(my.dat,xlab=units,
+      graphics::hist(my.dat,xlab=units,
            main="",cex.axis=1.1,cex.lab=1.4,col="grey85")
       graphics::box(lwd = 2.2)
       
-      boxplot(my.dat,ylab=units,
+      graphics::boxplot(my.dat,ylab=units,
               boxwex=0.6,col="grey85", cex.axis=1.1,range=2,
               pch=21,cex=1.4, bg="black",cex.lab=1.5)
       graphics::box(lwd = 2.2)
       
-      dev.off()
+      grDevices::dev.off()
       
       print("----- Done!")
       print(" ")
@@ -132,9 +136,9 @@ run.ensemble.analysis <- function(settings, plot.timeseries = NA, ensemble.id = 
                                    start.year = start.year, 
                                    end.year = end.year)
         
-        pdf(fname, width = 12, height = 9)
+        grDevices::pdf(fname, width = 12, height = 9)
         ensemble.ts.analysis <- ensemble.ts(read.ensemble.ts(settings, variable = variable), ...)
-        dev.off()
+        grDevices::dev.off()
         
         fname <- ensemble.filename(settings, "ensemble.ts.analysis", "Rdata", 
                                    all.var.yr = FALSE, 
@@ -151,9 +155,9 @@ run.ensemble.analysis <- function(settings, plot.timeseries = NA, ensemble.id = 
 
 ##' @export
 runModule.run.ensemble.analysis <- function(settings, ...) {
-  if (is.MultiSettings(settings)) {
-    return(papply(settings, runModule.run.ensemble.analysis, ...))
-  } else if (is.Settings(settings)) {
+  if (PEcAn.settings::is.MultiSettings(settings)) {
+    return(PEcAn.settings::papply(settings, runModule.run.ensemble.analysis, ...))
+  } else if (PEcAn.settings::is.Settings(settings)) {
     run.ensemble.analysis(settings, ...)
   } else {
     stop("runModule.run.ensemble.analysis only works with Settings or MultiSettings")
@@ -162,16 +166,18 @@ runModule.run.ensemble.analysis <- function(settings, ...) {
 
 
 #--------------------------------------------------------------------------------------------------#
-##'
-##' Reads ensemble time-series from PEcAn for the selected target variable
-##'
-##' @name read.ensemble.ts
-##' @title Reads an ensemble time-series from PEcAn for the selected target variable
-##' @return list
-##'
-##' @export
-##'
-##' @author Michael Dietze, Ryan Kelly
+#' Reads ensemble time-series from PEcAn for the selected target variable
+#'
+#' @param settings PEcAn settings object
+#' @param ensemble.id database ID, taken from settings if not specified
+#' @param variable variable name to process. Required
+#' @param start.year,end.year taken from settings if not specified
+#'
+#' @return list
+#'
+#' @export
+#'
+#' @author Michael Dietze, Ryan Kelly
 read.ensemble.ts <- function(settings, ensemble.id = NULL, variable = NULL, 
                              start.year = NULL, end.year = NULL) {
   
@@ -221,14 +227,15 @@ read.ensemble.ts <- function(settings, ensemble.id = NULL, variable = NULL,
   if (!file.exists(fname)) {
     PEcAn.logger::logger.severe("No ensemble samples file found!")
   }
-  load(fname)
+  samples <- new.env()
+  load(fname, envir = samples)
   
   # For backwards compatibility, define ens.run.ids if not just loaded
-  if (!exists("ens.run.ids")) {
-    ens.run.ids <- runs.samples$ens
+  if (is.null(samples$ens.run.ids)) {
+    samples$ens.run.ids <- samples$runs.samples$ens
   }
   
-  ensemble.size <- nrow(ens.run.ids)
+  ensemble.size <- nrow(samples$ens.run.ids)
   
   expr <- variable.ens$expression
   variables <- variable.ens$variables
@@ -236,8 +243,8 @@ read.ensemble.ts <- function(settings, ensemble.id = NULL, variable = NULL,
   ## read ensemble output
   # Leaving list output even though only one variable allowed for now. Will improve backwards compatibility and maybe help in the future.
   ensemble.ts <- vector("list", length(variables)) 
-  for(row in rownames(ens.run.ids)) {
-    run.id <- ens.run.ids[row, 'id']
+  for(row in rownames(samples$ens.run.ids)) {
+    run.id <- samples$ens.run.ids[row, 'id']
     print(run.id)
     
     for(var in seq_along(variables)){
@@ -294,17 +301,19 @@ filterNA <- function(x, w) {
 
 
 #--------------------------------------------------------------------------------------------------#
-##'
-##' Plots an ensemble time-series from PEcAn for the selected target variable
-##'
-##' @name ensemble.ts
-##' @title Plots an ensemble time-series from PEcAn for the selected target variable
-##' @return nothing, generates an ensemble time-series plot
-##'
-##' @export
-##'
-##' @author Michael Dietze, Ryan Kelly
-##'
+#' Plots an ensemble time-series from PEcAn for the selected target variable
+#'
+#' @param ensemble.ts ensemble timeseries to be plotted, as returned by [read.ensemble.ts()]
+#' @param observations observed data to plot over timeseries predictions
+#' @param window number of timepoints to average across
+#' @param ... additional arguments, currently ignored
+#'
+#' @return nothing, generates an ensemble time-series plot
+#'
+#' @export
+#'
+#' @author Michael Dietze, Ryan Kelly
+#'
 ensemble.ts <- function(ensemble.ts, observations = NULL, window = 1, ...) {
   print("------ Generating ensemble time-series plot ------")
   variable <- names(ensemble.ts)
@@ -331,7 +340,7 @@ ensemble.ts <- function(ensemble.ts, observations = NULL, window = 1, ...) {
     }
     
     ens.mean <- apply(myens, 2, mean, na.rm = TRUE)
-    CI <- apply(myens, 2, quantile, c(0.025, 0.5, 0.975), na.rm = TRUE)
+    CI <- apply(myens, 2, stats::quantile, c(0.025, 0.5, 0.975), na.rm = TRUE)
     ylim <- range(CI, na.rm = TRUE)
     
     ### temporary fix to values less than zero that are biologically unreasonable (e.g.

@@ -1,12 +1,4 @@
-#-------------------------------------------------------------------------------
-# Copyright (c) 2012 University of Illinois, NCSA.
-# All rights reserved. This program and the accompanying materials
-# are made available under the terms of the
-# University of Illinois/NCSA Open Source License
-# which accompanies this distribution, and is available at
-# http://opensource.ncsa.illinois.edu/license.html
-#-------------------------------------------------------------------------------
-##------------------------------------------------------------------------------------------------#
+
 ##' Setup the output variables that dvmdostem will generate and PEcAn will analyze.
 ##' This function handles the interplay between output variables and output spec file.
 ##' There are custom tags in the <model> section of the pecan xml file for dvmdostem
@@ -199,20 +191,25 @@ requested_vars_string2list <- function(req_v_str, outspec_path) {
 
   return(req_v_list)
 }
-##------------------------------------------------------------------------------------------------#
-##' convert parameters, do unit conversions and update parameter names from PEcAn database default
-##' to units/names within dvmdostem
-##'
-##' Performs model specific unit conversions on a a list of trait values,
-##' such as those provided to write.config
-##'
-##' @name convert.samples.dvmdostem
-##' @title Convert samples for dvmdostem
-##' @param trait_samples a matrix or dataframe of samples from the trait distribution
-##' @return matrix or dataframe with values transformed
-##' @export
-##' @author Shawn Serbin, Tobey Carman
-##' 
+
+
+
+
+
+
+#' Convert samples for dvmdostem
+#'
+#' convert parameters, do unit conversions and update parameter names from PEcAn database default
+#' to units/names within dvmdostem
+#'
+#' Performs model specific unit conversions on a a list of trait values,
+#' such as those provided to write.config
+#'
+#' @param trait_values a matrix or dataframe of samples from the trait distribution
+#' @return matrix or dataframe with values transformed
+#' @export
+#' @author Shawn Serbin, Tobey Carman
+#'
 convert.samples.dvmdostem <- function(trait_values) {
   
   if("SLA" %in% names(trait_values)) {

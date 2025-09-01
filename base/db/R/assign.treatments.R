@@ -1,19 +1,9 @@
-#-------------------------------------------------------------------------------
-# Copyright (c) 2012 University of Illinois, NCSA.
-# All rights reserved. This program and the accompanying materials
-# are made available under the terms of the
-# University of Illinois/NCSA Open Source License
-# which accompanies this distribution, and is available at
-# http://opensource.ncsa.illinois.edu/license.html
-#-------------------------------------------------------------------------------
-
-##-----------------------------------------------------------------------------#
 ##' Change treatments to sequential integers
 ##'
 ##' Assigns all control treatments the same value, then assigns unique treatments
 ##' within each site. Each site is required to have a control treatment.
 ##' The algorithm (incorrectly) assumes that each site has a unique set of experimental
-##' treatments. This assumption is required by the data in BETTdb that does not always consistently name treatments or quantity them in the managements table. Also it avoids having the need to estimate treatment by site interactions in the meta analysis model. This model uses data in the control treatment to estimate model parameters so the impact of the assumption is minimal.
+##' treatments. This assumption is required by the data in BETYdb that does not always consistently name treatments or quantity them in the managements table. Also it avoids having the need to estimate treatment by site interactions in the meta analysis model. This model uses data in the control treatment to estimate model parameters so the impact of the assumption is minimal.
 ##' @name assign.treatments
 ##' @title assign.treatments
 ##' @param data input data

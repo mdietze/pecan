@@ -1,12 +1,3 @@
-#-------------------------------------------------------------------------------
-# Copyright (c) 2012 University of Illinois, NCSA.
-# All rights reserved. This program and the accompanying materials
-# are made available under the terms of the
-# University of Illinois/NCSA Open Source License
-# which accompanies this distribution, and is available at
-# http://opensource.ncsa.illinois.edu/license.html
-#-------------------------------------------------------------------------------
-
 #' Merge multiple NetCDF files into one
 #' 
 #' @param files \code{character}. List of filepaths, which should lead to NetCDF files.
@@ -86,8 +77,6 @@ sipnet2datetime <- function(sipnet_tval, base_year, base_month = 1,
 ##' Convert SIPNET output to netCDF
 ##'
 ##' Converts all output contained in a folder to netCDF.
-##' @name model2netcdf.SIPNET
-##' @title Function to convert SIPNET model output to standard netCDF format
 ##'
 ##' @param outdir Location of SIPNET model output
 ##' @param sitelat Latitude of the site
@@ -98,7 +87,7 @@ sipnet2datetime <- function(sipnet_tval, base_year, base_month = 1,
 ##' @param overwrite Flag for overwriting nc files or not
 ##' @param conflict Flag for dealing with conflicted nc files, if T we then will merge those, if F we will jump to the next.
 ##' @param prefix prefix to read the output files
-##' @param delete.raw Flag to remove sipnet.out files, FALSE = do not remove files TRUE = remove files
+##' @param delete.raw logical: remove sipnet.out files after converting?
 ##'
 ##' @export
 ##' @author Shawn Serbin, Michael Dietze
@@ -140,7 +129,7 @@ model2netcdf.SIPNET <- function(outdir, sitelat, sitelon, start_date, end_date, 
   for (y in year_seq) {
     #initialize the conflicted as FALSE
     conflicted <- FALSE
-    
+    conflict <- TRUE    #conflict is set to TRUE to enable the rename of yearly nc file for merging SDA results with sub-annual data
     #if we have conflicts on this file.
     if (file.exists(file.path(outdir, paste(y, "nc", sep = "."))) & overwrite == FALSE & conflict == FALSE) {
       next
@@ -151,7 +140,7 @@ model2netcdf.SIPNET <- function(outdir, sitelat, sitelon, start_date, end_date, 
     print(paste("---- Processing year: ", y))  # turn on for debugging
 
     ## Subset data for processing
-    sub.sipnet.output <- subset(sipnet_output, year == y)
+    sub.sipnet.output <- subset(sipnet_output, sipnet_output$year == y)
     sub.sipnet.output.dims <- dim(sub.sipnet.output)
     dayfrac <- 1 / out_day
     step <- utils::head(seq(0, 1, by = dayfrac), -1)   ## probably dont want to use
@@ -296,13 +285,19 @@ model2netcdf.SIPNET <- function(outdir, sitelat, sitelon, start_date, end_date, 
       close(varfile)
       ncdf4::nc_close(nc)
       
-      #merge nc files
+      #merge nc files of the same year together to enable the assimilation of sub-annual data
       if(file.exists(file.path(outdir, "previous.nc"))){
         files <- c(file.path(outdir, "previous.nc"), file.path(outdir, "current.nc"))
       }else{
         files <- file.path(outdir, "current.nc")
       }
       mergeNC(files = files, outfile = file.path(outdir, paste(y, "nc", sep = ".")))
+      #The command "cdo" in mergeNC will automatically rename "time_bounds" to "time_bnds". However, "time_bounds" is used 
+      #in read_restart codes later. So we need to read the new NetCDF file and convert the variable name back. 
+      nc<- ncdf4::nc_open(file.path(outdir, paste(y, "nc", sep = ".")),write=TRUE)
+      nc<-ncdf4::ncvar_rename(nc,"time_bnds","time_bounds")
+      ncdf4::ncatt_put(nc, "time", "bounds","time_bounds", prec=NA)
+      ncdf4::nc_close(nc)
       unlink(files, recursive = T)
     }else{
       nc      <- ncdf4::nc_create(file.path(outdir, paste(y, "nc", sep = ".")), nc_var)

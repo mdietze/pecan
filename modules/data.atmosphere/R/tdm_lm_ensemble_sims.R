@@ -19,6 +19,7 @@
 ##' @param path.model - path to where the training model & betas is stored
 ##' @param direction.filter - Whether the model will be filtered backward or forward in time. options = c("backward", "forward")
 ##'                           (PalEON will go backward, anybody interested in the future will go forward)
+##' @param lags.list - optional list form of lags.init, with one entry for each unique `ens.day` in dat.mod
 ##' @param lags.init - a data frame of initialization parameters to match the data in dat.mod
 ##' @param dat.train - the training data used to fit the model; needed for night/day in
 ##'                    surface_downwelling_shortwave_flux_in_air
@@ -135,7 +136,7 @@ lm_ensemble_sims <- function(dat.mod, n.ens, path.model, direction.filter, lags.
       # shortwave is different because we only want to model daylight
       if (v == "surface_downwelling_shortwave_flux_in_air") {
         # Finding which days have measurable light
-        thresh.swdown <- quantile(dat.train$surface_downwelling_shortwave_flux_in_air[dat.train$surface_downwelling_shortwave_flux_in_air > 0], 0.05)
+        thresh.swdown <- stats::quantile(dat.train$surface_downwelling_shortwave_flux_in_air[dat.train$surface_downwelling_shortwave_flux_in_air > 0], 0.05)
 
 
         hrs.day <- unique(dat.train$time[dat.train$time$DOY == day.now &
@@ -227,8 +228,13 @@ lm_ensemble_sims <- function(dat.mod, n.ens, path.model, direction.filter, lags.
       }
 
       # Load the saved model
-      load(file.path(path.model, v, paste0("model_", v, "_", day.now,
-                                           ".Rdata")))
+      model.file <- file.path(path.model, v, paste0("model_", v, "_", day.now,
+                                                    ".Rdata"))
+      if(file.exists(model.file)) {
+        env = new.env()
+        load(model.file, envir = env)
+        mod.save <- env$mod.save
+      }
 
       # Pull coefficients (betas) from our saved matrix
 
@@ -340,18 +346,18 @@ lm_ensemble_sims <- function(dat.mod, n.ens, path.model, direction.filter, lags.
 
 
           filter.mean <- mean(dat.filter, na.rm=T)
-          filter.sd   <- sd(dat.filter, na.rm=T)
+          filter.sd   <- stats::sd(dat.filter, na.rm=T)
         } else {
 
           if(v %in% vars.sqrt){
             filter.mean <- mean(c(dat.pred^2, utils::stack(dat.sim[[v]])[,1]), na.rm=T)
-            filter.sd   <- sd(c(dat.pred^2, utils::stack(dat.sim[[v]])[,1]), na.rm=T)
+            filter.sd   <- stats::sd(c(dat.pred^2, utils::stack(dat.sim[[v]])[,1]), na.rm=T)
           } else if(v %in% vars.log){
             filter.mean <- mean(c(exp(dat.pred), utils::stack(dat.sim[[v]])[,1]), na.rm=T)
-            filter.sd   <- sd(c(exp(dat.pred), utils::stack(dat.sim[[v]])[,1]), na.rm=T)
+            filter.sd   <- stats::sd(c(exp(dat.pred), utils::stack(dat.sim[[v]])[,1]), na.rm=T)
           } else {
             filter.mean <- mean(c(dat.pred, utils::stack(dat.sim[[v]])[,1]), na.rm=T)
-            filter.sd   <- sd(c(dat.pred, utils::stack(dat.sim[[v]])[,1]), na.rm=T)
+            filter.sd   <- stats::sd(c(dat.pred, utils::stack(dat.sim[[v]])[,1]), na.rm=T)
           }
         }
 

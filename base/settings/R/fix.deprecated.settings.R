@@ -1,15 +1,8 @@
-##-----------------------------------------------------------------------------
-## Copyright (c) 2012 University of Illinois, NCSA.
-## All rights reserved. This program and the accompanying materials
-## are made available under the terms of the
-## University of Illinois/NCSA Open Source License
-## which accompanies this distribution, and is available at
-## http://opensource.ncsa.illinois.edu/license.html
-##-----------------------------------------------------------------------------
 #' Checks for and attempts to fix deprecated settings structure
 #'
 #' @title Fix Deprecated Settings
 #' @param settings settings list
+#' @param force Logical: re-run fixing of deprecated settings even if it has been done previously?
 #' @return updated settings list
 #' @author Ryan Kelly
 #' @export fix.deprecated.settings
